@@ -1,0 +1,44 @@
+
+/*	ICONS  ////////////////////////////////////////// */
+#MainWindow {
+	background-color: #21242a;
+}
+
+#w_icons {
+	background-color: #131315;
+}
+/* ////////////////////////////////////////////////// */
+/*	TERMINAL //////////////////////////////////////// */
+#terminalArea {
+	background-color: #17191e;
+}
+#terminalArea QLabel,QLineEdit,QTextBrowser{
+	color: #bdbec6;
+	background-color: #17191e;
+	border:none;
+}
+#messageArea QAbstractButton,QLineEdit{
+	color: #bdbec6;
+	background-color: #17191e;
+	border: 1px solid #131315;
+	border-radius: 0px;
+}
+#send{
+	color: #bdbec6;
+	background-color: #131315;
+	border: 0px solid #131315;
+	border-radius: 0px;
+	width: 80px;
+}
+/* ////////////////////////////////////////////////// */
+/*	MENUBUTON  ////////////////////////////////////// */
+#w_icons QPushButton, QLabel {
+	border:none;
+	/* border-bottom: 1px solid #b0b0b0; */
+}
+/* ////////////////////////////////////////////////// */
+
+#line{
+	color: #17191e;
+	background-color: #17191e;
+}
