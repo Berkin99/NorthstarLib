@@ -14,7 +14,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(909, 569)
+        MainWindow.resize(991, 679)
         palette = QtGui.QPalette()
         brush = QtGui.QBrush(QtGui.QColor(147, 75, 75))
         brush.setStyle(QtCore.Qt.SolidPattern)
@@ -132,7 +132,7 @@ class Ui_MainWindow(object):
         self.verticalLayout_4.addWidget(self.w_page)
         self.gridLayout.addWidget(self.w_widget, 0, 1, 1, 1)
         self.w_console = QtWidgets.QWidget(self.centralwidget)
-        self.w_console.setMaximumSize(QtCore.QSize(16777215, 250))
+        self.w_console.setMaximumSize(QtCore.QSize(16777215, 350))
         self.w_console.setObjectName("w_console")
         self.verticalLayout_7 = QtWidgets.QVBoxLayout(self.w_console)
         self.verticalLayout_7.setContentsMargins(0, 0, 0, 0)
@@ -250,7 +250,7 @@ class Ui_MainWindow(object):
         self.gridLayout.addWidget(self.w_console, 1, 1, 1, 1)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 909, 28))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 991, 28))
         palette = QtGui.QPalette()
         brush = QtGui.QBrush(QtGui.QColor(215, 215, 215))
         brush.setStyle(QtCore.Qt.SolidPattern)

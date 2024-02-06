@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>909</width>
-    <height>569</height>
+    <width>991</width>
+    <height>679</height>
    </rect>
   </property>
   <property name="palette">
@@ -322,7 +322,7 @@
       <property name="maximumSize">
        <size>
         <width>16777215</width>
-        <height>250</height>
+        <height>350</height>
        </size>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_7">
@@ -648,7 +648,7 @@ p, li { white-space: pre-wrap; }
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>909</width>
+     <width>991</width>
      <height>28</height>
     </rect>
    </property>

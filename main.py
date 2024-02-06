@@ -1,3 +1,4 @@
+#QT Designer to Python :
 
 #pyrcc5.exe .\resource.qrc -o .\resource_rc.py
 #pyuic5.exe .\northstar.ui -o .\northstar_ui.py
@@ -5,7 +6,6 @@
 import sys
 import serial
 import serial.tools.list_ports
-import threading
 from northport import *
 
 from PyQt5.QtWidgets import QMainWindow, QApplication, QPushButton, QWidget, QAction
@@ -15,12 +15,14 @@ from northstar_ui import Ui_MainWindow
 class Northstar(QMainWindow):
     def __init__(self):
         super(Northstar,self).__init__()
+        #UI Setup
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
         self.ui.w_page.setCurrentIndex(0)
-        self.ui.send.clicked.connect(self.send)
-        self.ui.sendmsg.returnPressed.connect(self.send)
+        self.ui.send.clicked.connect(self.portSend)
+        self.ui.sendmsg.returnPressed.connect(self.portSend)
 
+        # Connecting Menu buttons to related functions 
         self.ui.menuSerial.aboutToShow.connect(self.portSearch)
         self.ui.action9600.triggered.connect(lambda: self.setBaudRate(9600))
         self.ui.action19200.triggered.connect(lambda: self.setBaudRate(19200))
@@ -28,22 +30,25 @@ class Northstar(QMainWindow):
         self.ui.action57600.triggered.connect(lambda: self.setBaudRate(57600))
         self.ui.action115200.triggered.connect(lambda: self.setBaudRate(115200))
         
-        self.serial_port = NorthPort()
-        
-    def setComPort(self, port):
-        self.ui.comportLabel.setText(port)
-        self.serial_port.setComPort(port)
+        #Serial Port Object
+        self.northport = NorthPort()
+        self.setBaudRate(int(self.ui.baudrateLabel.text()))
+        #Connecting data ready Callback 
+        self.northport.rxCallback = self.portData
 
-    def setBaudRate(self,baud):
-        self.ui.baudrateLabel.setText(str(baud))
-        self.serial_port.setComPort(baud)
+    def setBaudRate(self,baudrate):
+        self.ui.baudrateLabel.setText(str(baudrate))
+        self.northport.baudrate = baudrate        
 
-        self.serial_thread = threading.Thread(target=self.portProcess)
-        self.serial_thread.start()
+    def setComPort(self, com):
+        self.ui.comportLabel.setText(com)
+        self.northport.com = com
+        #Set serial port when "COM" selected
+        self.northport.setSerial(self.northport.com,self.northport.baudrate)
 
-    def send(self):
+    def portSend(self):
         message = self.ui.sendmsg.text()
-        self.serial_port.transmit(message)
+        self.northport.transmit(message)
 
         self.ui.console.insertPlainText(message+"\r\n")
         self.ui.sendmsg.clear()
@@ -51,25 +56,26 @@ class Northstar(QMainWindow):
         self.ui.console.verticalScrollBar().setValue(self.ui.console.verticalScrollBar().maximum())
 
     def portSearch(self):
-        ports = [port.device for port in serial.tools.list_ports.comports()]
+        #Search and add founded COM ports as QAction to QMenu 
+        ports = self.northport.getAvailablePorts()
         self.ui.menuCOM.clear()
         for port in ports:
             act = QAction(port, self)
             act.text = port
             act.triggered.connect(lambda:self.setComPort(port))
             self.ui.menuCOM.addAction(act)
-            print(port + " added.")
+
+    def portData(self, data=None):
+        #Data Callback
+        if data!=None :
+            self.ui.console.insertPlainText(data)
+            self.ui.console.verticalScrollBar().setValue(self.ui.console.verticalScrollBar().maximum())
 
 
-    def portProcess(self):
-        while self.serial_port.port.is_open:
-            message = self.serial_port.readline()
-            if message:
-                self.ui.console.insertPlainText(message)
-                self.ui.console.verticalScrollBar().setValue(self.ui.console.verticalScrollBar().maximum())
-
-
-
+    def closeEvent(self,event):
+        #closeEvent is predetermined close function by PyQt
+        self.northport.destroy()
+        event.accept()
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
@@ -82,3 +88,5 @@ if __name__ == '__main__':
     window.show()
 
     sys.exit(app.exec())
+
+        
