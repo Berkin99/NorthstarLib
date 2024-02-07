@@ -8,12 +8,15 @@ class NorthPort:
     TX_MODE = 0
     RX_MODE = 1
     def __init__(self, com=None, baudrate=9600):
-        self.mode = self.RX_MODE
+        self.mode = None
         self.baudrate = 9600
         self.com = None
         self.port = None
         self.isActive = True
+
+        self.portErrorCallback = None
         self.rxCallback = None        
+        
         self.setSerial(com,baudrate)
         self.rxThread = threading.Thread(target=self.rxProcess,daemon=False)
         self.rxThread.start()
@@ -24,25 +27,35 @@ class NorthPort:
             self.com = com
             self.baudrate = baudrate
             self.port = serial.Serial(self.com,self.baudrate,timeout=1)
+            self.mode = self.RX_MODE
 
     def getAvailablePorts(self):
         return [port.device for port in serial.tools.list_ports.comports()]
 
     def receive(self):
-        self.mode = self.RX_MODE
         try:
             if self.port == None: return
             if self.port.in_waiting > 0:
-                return self.port.readline().decode('ascii')
+                try:
+                    return self.port.readline().decode("ascii")
+                except UnicodeDecodeError as a:
+                    return None
         except serial.SerialException as e:
-            pass
+            self.mode = None
+            if self.portErrorCallback != None:
+                self.portErrorCallback()
+            print("Serial Not Found")
+            return None
 
     def transmit(self, message):
+        if self.port == None:
+            return
+        
         self.mode = self.TX_MODE
         try:
             self.port.write(message.encode())
         except AttributeError as e:
-            print("Serial Not Found")
+            pass
         self.mode = self.RX_MODE
 
     def rxProcess(self):
@@ -55,9 +68,6 @@ class NorthPort:
 
             time.sleep(0.01)
         
-    def set_rxCallback(self,callback=None):
-        self.rxCallback = callback
-
     def destroy(self):
         self.isActive = False
         if self.port != None:

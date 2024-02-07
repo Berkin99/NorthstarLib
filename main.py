@@ -33,9 +33,11 @@ class Northstar(QMainWindow):
         #Serial Port Object
         self.northport = NorthPort()
         self.setBaudRate(int(self.ui.baudrateLabel.text()))
+
         #Connecting data ready Callback 
         self.northport.rxCallback = self.portData
-
+        self.northport.portErrorCallback = lambda: self.ui.comportLabel.setText("COM -")
+        
     def setBaudRate(self,baudrate):
         self.ui.baudrateLabel.setText(str(baudrate))
         self.northport.baudrate = baudrate        
