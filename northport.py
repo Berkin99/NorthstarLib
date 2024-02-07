@@ -5,10 +5,11 @@ import time
 baudrate_e = (9600,19200,38400,57600,115200)
 
 class NorthPort:
+    NO_CONNECTION = -1
     TX_MODE = 0
     RX_MODE = 1
     def __init__(self, com=None, baudrate=9600):
-        self.mode = None
+        self.mode = self.NO_CONNECTION
         self.baudrate = 9600
         self.com = None
         self.port = None
@@ -41,21 +42,17 @@ class NorthPort:
                 except UnicodeDecodeError as a:
                     return None
         except serial.SerialException as e:
-            self.mode = None
+            self.mode = self.NO_CONNECTION
             if self.portErrorCallback != None:
                 self.portErrorCallback()
             print("Serial Not Found")
             return None
 
     def transmit(self, message):
-        if self.port == None:
+        if (self.port == None or self.mode==self.NO_CONNECTION):
             return
-        
         self.mode = self.TX_MODE
-        try:
-            self.port.write(message.encode())
-        except AttributeError as e:
-            pass
+        self.port.write(message.encode())
         self.mode = self.RX_MODE
 
     def rxProcess(self):
