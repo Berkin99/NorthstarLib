@@ -48,15 +48,6 @@ class Northstar(QMainWindow):
         #Set serial port when "COM" selected
         self.northport.setSerial(self.northport.com,self.northport.baudrate)
 
-    def portSend(self):
-        message = self.ui.sendmsg.text()
-        self.northport.transmit(message)
-
-        self.ui.console.insertPlainText(message+"\r\n")
-        self.ui.sendmsg.clear()
-        self.ui.sendmsg.setFocus()
-        self.ui.console.verticalScrollBar().setValue(self.ui.console.verticalScrollBar().maximum())
-
     def portSearch(self):
         #Search and add founded COM ports as QAction to QMenu 
         ports = self.northport.getAvailablePorts()
@@ -67,15 +58,26 @@ class Northstar(QMainWindow):
             act.triggered.connect(lambda:self.setComPort(port))
             self.ui.menuCOM.addAction(act)
 
+    def portSend(self):
+        message = self.ui.sendmsg.text() # Get the text from text input
+        self.ui.sendmsg.clear()          # Clear text input area
+        self.ui.sendmsg.setFocus()       # Focus text input area again
+
+        self.northport.transmit(message)                # Transmit
+        self.ui.console.insertPlainText(message+"\r\n") # Insert the message with <CR><LF>
+        
+        self.ui.console.verticalScrollBar().setValue(self.ui.console.verticalScrollBar().maximum()) # Set console bar view to bottom 
+
     def portData(self, data=None):
-        #Data Callback
-        if data!=None :
-            self.ui.console.insertPlainText(data)
-            self.ui.console.verticalScrollBar().setValue(self.ui.console.verticalScrollBar().maximum())
+        if data==None:return #Return if there is no data
+        self.ui.console.insertPlainText(data) #Insert Raw Value ( IF MESSAGE DON'T HAVE CARRIAGE RETURN IT ACCUMULATES )
+
+        self.ui.console.verticalScrollBar().setValue(self.ui.console.verticalScrollBar().maximum())
 
 
     def closeEvent(self,event):
-        #closeEvent is predetermined close function by PyQt
+        # On Close: 
+        #"closeEvent()" is predetermined close function by PyQt
         self.northport.destroy()
         event.accept()
 
