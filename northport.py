@@ -7,9 +7,9 @@ baudrate_e = (9600,19200,38400,57600,115200)
 
 class NorthPort():
     
-    NO_CONNECTION = -1
-    TX_MODE = 0
-    RX_MODE = 1
+    NO_CONNECTION = 0
+    TX_MODE = 1
+    RX_MODE = 2
 
     def __init__(self, com=None, baudrate=9600):
         self.mode = self.NO_CONNECTION
@@ -58,7 +58,7 @@ class NorthPort():
         if self.port == None: return None #If there is no port
 
         try:
-            if (self.port.in_waiting > 0): return None  #If there is no rx data in port buffer
+            if not (self.port.in_waiting > 0): return None  #If there is no rx data in port buffer
             return self.port.readline().decode("ascii") #Decode and return the data
         except serial.SerialException as error:
             self.errorSerial()
