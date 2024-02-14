@@ -71,7 +71,6 @@ class Northstar(QMainWindow):
     def portData(self, data=None):
         if data==None:return #Return if there is no data
         self.ui.console.insertPlainText(data) #Insert Raw Value ( IF MESSAGE DON'T HAVE CARRIAGE RETURN IT ACCUMULATES )
-
         self.ui.console.verticalScrollBar().setValue(self.ui.console.verticalScrollBar().maximum())
 
 
