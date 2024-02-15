@@ -4,7 +4,7 @@
 /* ////////////////////////////////////////////////// */
 /*	TERMINAL //////////////////////////////////////// */
 #terminalArea {background-color: #17191e;}
-#terminalArea QLineEdit,QTextBrowser{
+#terminalArea QLineEdit,QPlainTextEdit{
 	color: #757d8c;
 	selection-color: #fff;
 	background-color: #17191e;

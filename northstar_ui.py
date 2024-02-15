@@ -238,11 +238,8 @@ class Ui_MainWindow(object):
         self.terminalLabel.setFont(font)
         self.terminalLabel.setObjectName("terminalLabel")
         self.verticalLayout_3.addWidget(self.terminalLabel)
-        self.console = QtWidgets.QTextBrowser(self.terminalArea)
-        font = QtGui.QFont()
-        font.setFamily("Consolas")
-        font.setPointSize(10)
-        self.console.setFont(font)
+        self.console = QtWidgets.QPlainTextEdit(self.terminalArea)
+        self.console.setReadOnly(True)
         self.console.setObjectName("console")
         self.verticalLayout_3.addWidget(self.console)
         self.horizontalLayout_2.addLayout(self.verticalLayout_3)
@@ -316,11 +313,6 @@ class Ui_MainWindow(object):
         self.baudrateLabel.setText(_translate("MainWindow", "115200"))
         self.versionLabel.setText(_translate("MainWindow", "V0.1 Alpha"))
         self.terminalLabel.setText(_translate("MainWindow", "Terminal"))
-        self.console.setHtml(_translate("MainWindow", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
-"<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
-"p, li { white-space: pre-wrap; }\n"
-"</style></head><body style=\" font-family:\'Consolas\'; font-size:10pt; font-weight:400; font-style:normal;\">\n"
-"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p></body></html>"))
         self.menuFile.setTitle(_translate("MainWindow", "File"))
         self.menuSerial.setTitle(_translate("MainWindow", "Serial"))
         self.menuBaudrate.setTitle(_translate("MainWindow", "Baudrate"))

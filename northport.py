@@ -77,9 +77,8 @@ class NorthPort():
         # Read data continuously and callback when data is ready
         
         while self.isActive:
-            time.sleep(0.01)
             if self.mode != self.RX_MODE: continue
-
+            time.sleep(0.01)
             self.rxData = self.receive()
             if self.rxData!=None and self.rxCallback!=None: 
                 self.rxCallback(self.rxData)
