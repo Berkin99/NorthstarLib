@@ -6,11 +6,11 @@
 import sys
 import serial
 import serial.tools.list_ports
-from northport import *
 
 from PyQt5.QtWidgets import QMainWindow, QApplication, QPushButton, QWidget, QAction
 from PyQt5.QtCore import Qt, pyqtSlot, QFile, QTextStream
-from northstar_ui import Ui_MainWindow
+from ntrp.northport import *
+from nqt.northstar_ui import Ui_MainWindow
 
 class Northstar(QMainWindow):
     def __init__(self):
@@ -19,8 +19,8 @@ class Northstar(QMainWindow):
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
         self.ui.w_page.setCurrentIndex(0)
-        self.ui.send.clicked.connect(self.portSend)
-        self.ui.sendmsg.returnPressed.connect(self.portSend)
+        self.ui.send.clicked.connect(self.consoleSend)
+        self.ui.sendmsg.returnPressed.connect(self.consoleSend)
 
         # Connecting Menu buttons to related functions 
         self.ui.menuSerial.aboutToShow.connect(self.portSearch)
@@ -34,9 +34,6 @@ class Northstar(QMainWindow):
         self.northport = NorthPort()
         self.setBaudRate(int(self.ui.baudrateLabel.text()))
 
-        #Connecting data ready Callback 
-        self.northport.rxCallback = self.portData
-        self.northport.portErrorCallback = lambda: self.ui.comportLabel.setText("COM -")
         
     def setBaudRate(self,baudrate):
         self.ui.baudrateLabel.setText(str(baudrate))
@@ -58,38 +55,24 @@ class Northstar(QMainWindow):
             act.triggered.connect(lambda:self.setComPort(port))
             self.ui.menuCOM.addAction(act)
 
-    def portSend(self):
+    def consoleSend(self):
         message = self.ui.sendmsg.text() # Get the text from text input
         self.ui.sendmsg.clear()          # Clear text input area
         self.ui.sendmsg.setFocus()       # Focus text input area again
 
         self.northport.transmit(message)                # Transmit
-        self.ui.console.insertPlainText(message+"\r\n") # Insert the message with <CR><LF>
-        
-        self.ui.console.verticalScrollBar().setValue(self.ui.console.verticalScrollBar().maximum()) # Set console bar view to bottom 
+        self.consoleAppend(message+"\r\n") # Insert the message with <CR><LF>
 
-    def portData(self, data=None):
+    def consoleAppend(self, data=None):
         if data==None:return #Return if there is no data
         self.ui.console.insertPlainText(data)
         self.ui.console.verticalScrollBar().setValue(self.ui.console.verticalScrollBar().maximum())
 
-
+    def consoleClear(self):
+        self.ui.console.clear()
+        
     def closeEvent(self,event):
         # On Close: 
         #"closeEvent()" is predetermined close function by PyQt
         self.northport.destroy()
         event.accept()
-
-if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    with open("style.qss","r") as style_file:
-        style_str = style_file.read()
-
-    app.setStyleSheet(style_str)
-
-    window = Northstar()
-    window.show()
-
-    sys.exit(app.exec())
-
-        

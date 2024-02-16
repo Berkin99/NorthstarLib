@@ -323,4 +323,4 @@ class Ui_MainWindow(object):
         self.action38400.setText(_translate("MainWindow", "38400"))
         self.action57600.setText(_translate("MainWindow", "57600"))
         self.action115200.setText(_translate("MainWindow", "115200"))
-import resource_rc
+import nqt.resource_rc
