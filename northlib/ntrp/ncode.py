@@ -8,45 +8,44 @@
 #   2024 Yeniay Uav Flight Control Systems
 #   Research and Development Team
 
-#NRF PROTOCOL: 32 Bytes
-#NCODE PROTOCOL : 32 Bytes
+#NCODE PROTOCOL
 
-# $HDR,xxxxx,yyyyy,zzzz\r\n
-# $VEL,
-# $DS4,X,Y,Z,T\r\n
+from enum import Enum
 
+class Header_e(Enum):
+    NOP = 0     # No Operation
+    ACK = 1     # ACK Message
+    GET = 2     # GET the data address walue
+    SET = 3     # SET the data address value
+    MSG = 4     # Debug MSG
+    CMD = 5     # COMMANDER
 
-# MSG [0,"TEST"]
-# ACK [1,"OK"]
-# POS [2,x,y,z]
-# POS [2,x,y,z]
+class Data_e(Enum):
+    BOOL    = 0
+    INT8    = 1
+    INT16   = 2
+    INT32   = 3
+    FLOAT   = 4
+    DOUBLE  = 5
+    VEC16   = 6
+    VEC32   = 7
+
 class NcodeMSG():
-    MSG = 0
-    ACK = 1
-    VEC = 2
-    CMD = 3
-    INT = 4
+    
+    def __init__(self):
+        self.header = 0
+        self.header = 0
+        self.data = []
+        self.type = 0 
 
     def vectorMSG(self,header,vec):
-        pass
-    def positionMSG(self,vec):
-        pass
-    def velocityMSG(self,vec):
-        pass
-    def directionMSG(self,vec):
-        pass
-
+        self.header = self.VEC
+        self.data = vec
+        self.type = 0
 
 
 class Ncode():
-    Header={
-        "MSG" : NcodeMSG.MSG, #DEBUG MESSAGE
-        "ACK" : NcodeMSG.ACK, #ACK
-        "VEC" : NcodeMSG.VEC, #VECTOR
-        "CMD" : NcodeMSG.CMD, #Command
-        "INT" : NcodeMSG.INT, #INT
-    }
-    
+
     def encode(self,msg):
         #encode
         return 

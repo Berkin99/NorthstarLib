@@ -10,16 +10,17 @@
 
 import threading
 import serial
+import serial.tools.list_ports
 import time
-from northbuffer import *
+from ntrp.northbuffer import *
+
+baudrate_e = (9600,19200,38400,57600,115200)
 
 class NorthPort(): # NORTH PORT SERIAL COM
     
     NO_CONNECTION = 0
     TX_MODE = 1
     RX_MODE = 2
-    # Baudrate Enum
-    baudrate_e = (9600,19200,38400,57600,115200)
 
     def __init__(self, com=None, baudrate=9600):
         self.mode = self.NO_CONNECTION
@@ -35,7 +36,7 @@ class NorthPort(): # NORTH PORT SERIAL COM
 
     def setSerial(self,com=None,baudrate=9600):
         #Control Com and Baudrate (isAvailable)
-        if not(self.baudrate_e.__contains__(baudrate) and (com in self.getAvailablePorts())): return
+        if not(baudrate_e.__contains__(baudrate) and (com in self.getAvailablePorts())): return
         
         if self.port != None:
             self.mode = self.NO_CONNECTION #No Connection info for Rx Thread
@@ -93,4 +94,5 @@ class NorthPort(): # NORTH PORT SERIAL COM
         self.isActive = False
         if self.port != None:
             self.port.close()
+
 

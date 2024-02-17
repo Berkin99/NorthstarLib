@@ -8,8 +8,8 @@
 #   2024 Yeniay Uav Flight Control Systems
 #   Research and Development Team
 
-from northport import *
-from ncode import * 
+from ntrp.northport import NorthPort
+from ntrp.ncode import Ncode 
 
 class NorthRadio(NorthPort):
     BAUDRATE = 115200
@@ -22,15 +22,14 @@ class NorthRadio(NorthPort):
     def setUri(self, uri):
         pass
 
-    def txCMD(self,cmd):
-        #msg = ncode.encode(cmd)
-        #self.transmit(msg)
-        pass
-    
-    def rxCMD(self):
+    def tx(self,cmd):
+        msg = Ncode.encode(cmd)
+        if msg != None:
+            self.transmit(msg)
+        
+    def rx(self):
         msg = self.buffer.read()
-        #return ncode.decode()
-        pass
+        return Ncode.decode(msg)
 
     def destroy(self):
         return super().destroy()
