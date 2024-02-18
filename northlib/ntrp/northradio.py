@@ -8,28 +8,91 @@
 #   2024 Yeniay Uav Flight Control Systems
 #   Research and Development Team
 
-from ntrp.northport import NorthPort
-from ntrp.ncode import Ncode 
+import threading
+from northlib.ntrp.northport  import NorthPort
+from northlib.ntrp.ntrpstack  import NTRPCoder
+from northlib.ntrp.ntrpstack  import NTRPPacket
+from northlib.ntrp.ntrpbuffer import NTRPBuffer
+
+bandwidth_e = (250,1000,2000) #kbps
+
+__author__ = 'Yeniay RD'
+__all__ = ['NorthRadio','NorthPipe']
+
+class NorthPipe():
+    
+    NRF_250KBPS  = 250
+    NRF_1000KBPS = 1000
+    NRF_2000KBPS = 2000
+
+    def __init__(self, ch = 0, bandwidth = NRF_1000KBPS, address = '300'):
+        self.id = 0
+        self.setCh (ch)
+        self.setBandwidth(bandwidth)
+        self.setAddress(address)
+        self.buffer = NTRPBuffer(20)
+        self.isActive = True
+    
+    def setCh(self,ch):
+        self.channel = ch
+        return True
+
+    def setBandwidth(self,bw):
+        if not bandwidth_e.__contains__(bw): return False
+        self.bandwidth = bw
+        return True
+    
+    def setAddress(self, address):
+        self.address = address
+
+    def setid(self,index):
+        self.id = index
 
 class NorthRadio(NorthPort):
-    BAUDRATE = 115200
+    
+    def __init__(self, com=None):
+        super().__init__(com, 115200)
+        self.logbuffer = NTRPBuffer(20)
+        self.pipes = []
+        self.beginRadio()
 
-    def __init__(self, uri, com=None):
-        super().__init__(com, self.BAUDRATE)
-        self.uri = uri
-        self.nrfChannel = 0
+    def beginRadio(self):
+        if self.mode == self.READY:
+            self.isActive = True
+            self.rxThread = threading.Thread(target=self.rxProcess,daemon=False)
+            self.rxThread.start() 
 
-    def setUri(self, uri):
-        pass
+    def openPipe(self,pipe):
+        #Transmit open pipe message to dongle
+        #Receive the index of pipe
+        #pipe.id = 
+        self.pipes.append(pipe)
 
-    def tx(self,cmd):
-        msg = Ncode.encode(cmd)
-        if msg != None:
-            self.transmit(msg)
-        
-    def rx(self):
-        msg = self.buffer.read()
-        return Ncode.decode(msg)
+    def closePipe(self,pipe):
+        #Transmit close pipe message to dongle
+        self.pipes.remove(pipe)
+
+    def packetPipe(self,packet):
+        sender = packet.sender
+        for pipe in self.pipes:
+            if sender == pipe.id:
+                pipe.buffer.append(packet)
+                return 
+    
+    def sendPipe(self,pipe,packet):
+        packet.sender = 0
+        packet.receiver = pipe.id
+        msg = NTRPCoder.encode(packet)
+        self.transmit(msg)
+
+    def rxProcess(self):
+        while self.isActive:
+            msg = self.receive()
+            if msg == None: continue
+            print(ord(msg.decode()))
+            #packet = NTRPCoder.decode(msg)
+            #self.packetPipe(packet)
 
     def destroy(self):
+        self.isActive = False
         return super().destroy()

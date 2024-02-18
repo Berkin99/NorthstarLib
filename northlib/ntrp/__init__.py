@@ -8,15 +8,50 @@
 #   2024 Yeniay Uav Flight Control Systems
 #   Research and Development Team
 
-from .northbuffer import NorthBuffer
-from .northport import NorthPort
-from .ncode import Ncode
-from .ncode import NcodeMSG
-from .northradio import NorthRadio
+from northlib.ntrp.ntrpbuffer import NTRPBuffer
+from northlib.ntrp.ntrpstack import NTRPCoder
+from northlib.ntrp.ntrpstack import NTRPPacket
+from northlib.ntrp.northport import NorthPort
+from northlib.ntrp.northradio import NorthRadio
 
-__all__ = [
-    'NorthBuffer',
-    'Ncode',
-    'NcodeMSG',
-    'NorthRadio',
-    'NorthPort']
+__author__ = 'Yeniay RD'
+__all__ = []
+
+import serial
+import serial.tools.list_ports
+import time
+
+class RadioManager():
+    def __init__(self) -> None:
+        self.availableRadios = []
+        self.isInit = False
+
+    def radioSearch(self):
+        if self.isInit: return
+        coms = NorthPort.getAvailablePorts()
+        print(coms)
+        for com in coms:
+            ser = serial.Serial()
+            ser.port = com
+            ser.baudrate = 115200 
+            ser.timeout = 1
+            ser.open()
+            testdata = ser.read(8).decode()
+            if NorthPort.SYNC_DATA in testdata:
+                print('NorthRadio found : '+com)
+                #ser.write("OK".encode())
+                ser.close()
+                time.sleep(1)
+                self.availableRadios.append(NorthRadio(com))
+
+        self.isInit = True
+
+    def radioClose(self):
+        for radio in self.availableRadios:
+            radio.destroy()
+        self.availableRadios.clear()
+        self.isInit = False
+    
+
+
+

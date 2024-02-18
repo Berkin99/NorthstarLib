@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env pythonh
 # -*- coding: utf-8 -*-
 #  __  __ ____ _  __ ____ ___ __  __
 #  \ \/ // __// |/ //  _// _ |\ \/ /
@@ -8,35 +8,36 @@
 #   2024 Yeniay Uav Flight Control Systems
 #   Research and Development Team
 
-import threading
 import serial
 import serial.tools.list_ports
 import time
-from ntrp.northbuffer import *
+from northlib.ntrp.ntrpbuffer import NTRPBuffer
 
-baudrate_e = (9600,19200,38400,57600,115200)
+__author__ = 'Yeniay RD'
+__all__ = ['NorthPort']
+
+baudrate_e = (0,9600,19200,38400,57600,115200)
 
 class NorthPort(): # NORTH PORT SERIAL COM
     
-    NO_CONNECTION = 0
-    TX_MODE = 1
-    RX_MODE = 2
+    AUTOBAUDRATE    = 0
+    NO_CONNECTION   = 0
+    READY           = 1
+    BUSY            = 2
+    PORTDELAY       = 0.01 #1ms Delay
+    
+    SYNC_DATA       = "*NC"
 
-    def __init__(self, com=None, baudrate=9600):
+    def __init__(self, com=None, baudrate=AUTOBAUDRATE):
         self.mode = self.NO_CONNECTION
         self.baudrate = None
         self.com = None
         self.port = None
-        self.isActive = True
-        self.buffer= NorthBuffer(10)
         self.setSerial(com,baudrate)
-        #Rx Thread Loop
-        self.rxThread = threading.Thread(target=self.rxProcess,daemon=False)
-        self.rxThread.start()
 
-    def setSerial(self,com=None,baudrate=9600):
+    def setSerial(self,com=None,baudrate=AUTOBAUDRATE):
         #Control Com and Baudrate (isAvailable)
-        if not(baudrate_e.__contains__(baudrate) and (com in self.getAvailablePorts())): return
+        if not(baudrate_e.__contains__(baudrate) and (com in NorthPort.getAvailablePorts())): return
         
         if self.port != None:
             self.mode = self.NO_CONNECTION #No Connection info for Rx Thread
@@ -46,52 +47,61 @@ class NorthPort(): # NORTH PORT SERIAL COM
         self.baudrate = baudrate
         try:
             self.port = serial.Serial(self.com,self.baudrate,timeout=1)
-            self.mode = self.RX_MODE 
+            self.mode = self.READY
         except serial.SerialException as error:
             self.errorSerial() #Serial Port Problem 
     
+    def readySerial(self):
+        if self.port == None or self.mode==self.NO_CONNECTION: return False
+        time.sleep(self.PORTDELAY)
+        while self.mode == self.BUSY:
+            time.sleep(self.PORTDELAY)
+        return True
+
     def errorSerial(self):
             self.mode = self.NO_CONNECTION
             self.port = None 
             print("Serial Exception")
-            if self.portErrorCallback != None: self.portErrorCallback()
 
-    def getAvailablePorts(self):
+    def getAvailablePorts():
         return [port.device for port in serial.tools.list_ports.comports()]
 
     def receive(self):
-        if (self.port == None or self.mode==self.NO_CONNECTION): return None
+        if not self.readySerial(): return None
+        self.mode = self.BUSY
         try:
-            if not (self.port.in_waiting > 0): return None  #If there is no rx data in port buffer
-            return self.port.readline().decode("ascii") #Decode and return the data
+            if not (self.port.in_waiting > 0):
+                self.mode = self.READY 
+                return None  #If there is no rx data in port buffer
+            msg = self.port.read(1)                         #Decode and return the data
+            self.mode = self.READY
+            return msg
+        except serial.SerialException as error:
+            self.errorSerial()
+            return None
+    
+    def receiveLine(self):
+        if not self.readySerial(): return None
+        self.mode = self.BUSY
+        try:
+            if not (self.port.in_waiting > 0):
+                self.mode = self.READY 
+                return None                                 #If there is no rx data in port buffer
+            msg = self.port.readline()                      #Decode and return the data
+            self.mode = self.READY
+            return msg
         except serial.SerialException as error:
             self.errorSerial()
             return None
 
-    def transmit(self, message):
-        if (self.port == None or self.mode==self.NO_CONNECTION): return
-
-        self.mode = self.TX_MODE #TX mode info suspends the Rx Thread
-        self.port.write(message.encode())
-        self.mode = self.RX_MODE #Resume Rx Thread
-
-    def rxProcess(self):
-        # Rx Thread loop is available while
-        # self.mode is RX_MODE
-        # self.isActive is True 
-        # Read data continuously and callback when data is ready
-        while self.isActive:
-            if self.mode != self.RX_MODE:
-                time.sleep(0.1) 
-                continue
-            msg = self.receive()
-            if msg != None:
-                self.buffer.append(msg)
-
+    def transmit(self, msg):
+        if not self.readySerialSerial(): return None
+        self.mode = self.BUSY
+        self.port.write(msg)
+        self.mode = self.READY
+    
     def destroy(self):
-        # Destroy the Rx Thread
-        # Close the Serial Port
-        self.isActive = False
+        self.mode = self.NO_CONNECTION
         if self.port != None:
             self.port.close()
 

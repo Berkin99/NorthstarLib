@@ -8,7 +8,13 @@
 #   2024 Yeniay Uav Flight Control Systems
 #   Research and Development Team
 
+__author__ = 'Yeniay RD'
+__all__ = ['Commander']
+
 
 class Commander():
     def __init__(self) -> None:
         pass
+
+    #def set POSITION
+    #def set MODE MANUAL

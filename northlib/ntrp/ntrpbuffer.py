@@ -9,18 +9,11 @@
 #   Research and Development Team
 
 import time
-#!/usr/bin/env python
-import sys
-import os
 
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(os.path.dirname(SCRIPT_DIR))
+__author__ = 'Yeniay RD'
+__all__ = ['NTRPBuffer']
 
-
-__all__ = ["NorthBuffer"]
-
-
-class NorthBuffer(): # NORTH BUFFER lIFO
+class NTRPBuffer(): # NORTH BUFFER lIFO
     
     def __init__(self, size=30):
 
