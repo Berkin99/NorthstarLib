@@ -95,9 +95,9 @@ class NorthPort(): # NORTH PORT SERIAL COM
             return None
 
     def transmit(self, msg):
-        if not self.readySerialSerial(): return None
+        if not self.readySerial(): return None
         self.mode = self.BUSY
-        self.port.write(msg)
+        self.port.write(msg.encode())
         self.mode = self.READY
     
     def destroy(self):

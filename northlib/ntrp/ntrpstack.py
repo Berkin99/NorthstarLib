@@ -70,6 +70,8 @@ class NTRPPacket():
 
 
 def uniteCMD(packet):
+    packed = chr(packet.data[0])
+    return 
     pass
 
 uniteDict = {
@@ -92,12 +94,11 @@ class NTRPCoder():
         uniteDict[packet.header.name](packet)
 
     def encode(packet):
-        msg = []
-        msg.append(NTRPCoder.NTRP_START)        
-        msg.append(chr(packet.sender))
-        msg.append(chr(packet.receiver))
-        msg.append(chr(packet.header))
-        msg.append(NTRPCoder.unite(packet))
+        msg = NTRPCoder.NTRP_START        
+        msg += str(packet.sender)
+        msg += str(packet.receiver)
+        msg += chr(packet.header)
+        msg += NTRPCoder.unite(packet)
         return msg
 
     def decode(msg):

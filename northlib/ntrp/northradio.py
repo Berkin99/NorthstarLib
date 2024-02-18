@@ -8,6 +8,7 @@
 #   2024 Yeniay Uav Flight Control Systems
 #   Research and Development Team
 
+import time
 import threading
 from northlib.ntrp.northport  import NorthPort
 from northlib.ntrp.ntrpstack  import NTRPCoder
@@ -54,8 +55,14 @@ class NorthRadio(NorthPort):
         super().__init__(com, 115200)
         self.logbuffer = NTRPBuffer(20)
         self.pipes = []
+        time.sleep(0.3)
+        self.port.write("O".encode())
+        time.sleep(0.05)
+        self.port.read_all()
+
         self.beginRadio()
 
+        
     def beginRadio(self):
         if self.mode == self.READY:
             self.isActive = True
@@ -89,7 +96,7 @@ class NorthRadio(NorthPort):
         while self.isActive:
             msg = self.receive()
             if msg == None: continue
-            print(ord(msg.decode()))
+            print(ord(msg))
             #packet = NTRPCoder.decode(msg)
             #self.packetPipe(packet)
 

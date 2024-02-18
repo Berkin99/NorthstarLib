@@ -39,9 +39,8 @@ class RadioManager():
             testdata = ser.read(8).decode()
             if NorthPort.SYNC_DATA in testdata:
                 print('NorthRadio found : '+com)
-                #ser.write("OK".encode())
+                ser.write("O".encode())
                 ser.close()
-                time.sleep(1)
                 self.availableRadios.append(NorthRadio(com))
 
         self.isInit = True

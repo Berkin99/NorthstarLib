@@ -8,7 +8,9 @@ from enum import Enum
 import time
 
 if __name__ == '__main__':
+
+    print("OK".encode())
     rmg = RadioManager()
     rmg.radioSearch()
-    time.sleep(5)
+    time.sleep(2)
     rmg.radioClose()
