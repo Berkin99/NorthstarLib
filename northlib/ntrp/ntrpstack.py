@@ -31,7 +31,7 @@ class NTRPType_e(Enum):
     FLOAT   = 4
     DOUBLE  = 5
     VEC16   = 6
-    VEC32   = 7
+    QUAD8   = 7
     STRING  = 8
 
 class NTRPPacket():
@@ -39,15 +39,18 @@ class NTRPPacket():
     MAX_DATA_SIZE = 30
 
     def __init__(self):
-        self.sender = '0'     #char
+        self.sender   = '0'   #char
         self.receiver = '0'   #char
 
         self.header = NTRPHeader_e.NOP
-        self.type = NTRPType_e.BOOL
+        self.type   = NTRPType_e.BOOL
 
-        self.varID = 0      #int
-        self.data = []      #BYTES
-        self.size = 0
+        self.varID   = 0         #int
+        self.size    = 0         #size
+        self.payload = bytearray #payload
+
+        self.data    = None    #the data
+
 
     def setAddress(self,address):
         self.address = address
@@ -55,13 +58,15 @@ class NTRPPacket():
     def setChannel(self,channel):
         self.ch = channel
 
-    def setHeader(self,header):
-        if not NTRPHeader_e.__contains__(header): return 
-        self.header = header
+    def setHeader(self,headername):
+        for header in NTRPHeader_e:
+            if header.name == headername:        
+                self.header = header
 
-    def setType(self,type):
-        if not NTRPType_e.__contains__(type): return 
-        self.type = type
+    def setType(self,typename):
+        for type in NTRPType_e:
+            if type.name == typename:        
+                self.type = type
     
     def setVarID(self,id):
         self.varID = id
@@ -70,9 +75,10 @@ class NTRPPacket():
 
 
 def uniteCMD(packet):
-    packed = chr(packet.data[0])
-    return 
-    pass
+    unit = ""
+    for byte in bytearray(packet.data):
+        unit += chr(byte)
+    return unit
 
 uniteDict = {
     'CMD' : uniteCMD
@@ -91,14 +97,15 @@ class NTRPCoder():
     NTRP_PAYLOAD_INDEX  = 0x06
 
     def unite(packet):
-        uniteDict[packet.header.name](packet)
+        unit = chr(packet.header.value) + uniteDict[packet.header.name](packet)
+        return unit
 
     def encode(packet):
         msg = NTRPCoder.NTRP_START        
         msg += str(packet.sender)
         msg += str(packet.receiver)
-        msg += chr(packet.header)
         msg += NTRPCoder.unite(packet)
+        msg += NTRPCoder.NTRP_END
         return msg
 
     def decode(msg):

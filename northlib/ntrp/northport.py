@@ -24,10 +24,8 @@ class NorthPort(): # NORTH PORT SERIAL COM
     NO_CONNECTION   = 0
     READY           = 1
     BUSY            = 2
-    PORTDELAY       = 0.01 #1ms Delay
+    PORTDELAY       = 0.01 #10ms Delay
     
-    SYNC_DATA       = "*NC"
-
     def __init__(self, com=None, baudrate=AUTOBAUDRATE):
         self.mode = self.NO_CONNECTION
         self.baudrate = None

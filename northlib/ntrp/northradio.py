@@ -50,18 +50,33 @@ class NorthPipe():
         self.id = index
 
 class NorthRadio(NorthPort):
-    
-    def __init__(self, com=None):
-        super().__init__(com, 115200)
-        self.logbuffer = NTRPBuffer(20)
-        self.pipes = []
-        time.sleep(0.3)
-        self.port.write("O".encode())
-        time.sleep(0.05)
-        self.port.read_all()
 
+    DEFAULT_BAUD    = 115200
+    SYNC_DATA       = "*NC"
+    PAIR_DATA       = "*OK"
+
+    def __init__(self, com=None):
+
+        super().__init__(com, self.DEFAULT_BAUD)
+        self.logbuffer = NTRPBuffer(20)
+        self.isSync = False
+        self.pipes = []
+        self.syncRadio()
         self.beginRadio()
 
+    def syncRadio(self,timeout = 2):
+        timer = 0.0
+        while self.isSync == False or timer>=timeout:
+            data = self.port.read(8)
+            data = data.decode()
+            if self.SYNC_DATA in data: self.isSync = True
+            time.sleep(0.01) 
+            timer += 0.01
+        
+        
+        self.port.write(self.PAIR_DATA.encode())
+        time.sleep(0.3)      #Wait remaining data
+        self.port.read_all() #Clear the buffer
         
     def beginRadio(self):
         if self.mode == self.READY:
@@ -93,10 +108,12 @@ class NorthRadio(NorthPort):
         self.transmit(msg)
 
     def rxProcess(self):
+        while self.isSync == False:
+            pass
         while self.isActive:
             msg = self.receive()
             if msg == None: continue
-            print(ord(msg))
+            print(msg)
             #packet = NTRPCoder.decode(msg)
             #self.packetPipe(packet)
 

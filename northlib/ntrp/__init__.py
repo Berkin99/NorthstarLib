@@ -31,15 +31,11 @@ class RadioManager():
         coms = NorthPort.getAvailablePorts()
         print(coms)
         for com in coms:
-            ser = serial.Serial()
-            ser.port = com
-            ser.baudrate = 115200 
-            ser.timeout = 1
-            ser.open()
+            ser = serial.Serial(com,NorthRadio.DEFAULT_BAUD,timeout=1)
             testdata = ser.read(8).decode()
-            if NorthPort.SYNC_DATA in testdata:
+            if NorthRadio.SYNC_DATA in testdata:
                 print('NorthRadio found : '+com)
-                ser.write("O".encode())
+                ser.read_all()
                 ser.close()
                 self.availableRadios.append(NorthRadio(com))
 
