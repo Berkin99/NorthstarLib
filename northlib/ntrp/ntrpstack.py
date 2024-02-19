@@ -106,7 +106,9 @@ class NTRPCoder():
         msg += str(packet.receiver)
         msg += NTRPCoder.unite(packet)
         msg += NTRPCoder.NTRP_END
-        return msg
+        byt = bytearray()
+        byt.extend(map(ord, msg))
+        return byt
 
     def decode(msg):
         pass

@@ -32,7 +32,15 @@ class RadioManager():
         print(coms)
         for com in coms:
             ser = serial.Serial(com,NorthRadio.DEFAULT_BAUD,timeout=1)
-            testdata = ser.read(8).decode()
+            testdata = ""
+            while 1:
+                try:
+                    if(ser.in_waiting>8):
+                        testdata = ser.read(8).decode()
+                        break;
+                except UnicodeDecodeError as e:
+                    continue
+
             if NorthRadio.SYNC_DATA in testdata:
                 print('NorthRadio found : '+com)
                 ser.read_all()

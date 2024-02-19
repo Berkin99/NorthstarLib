@@ -12,14 +12,18 @@ if __name__ == '__main__':
 
     packet = nt.NTRPPacket()
     packet.setHeader('CMD')
-    packet.setHeader('QUAD8')
-    packet.data = [255,32,33,34]
-    msg = nt.NTRPCoder.encode(packet)
+    packet.data = [255,55,44,34]
+    byt = nt.NTRPCoder.encode(packet)
+    
+    # msg = ':'.join(hex(ord(x))[2:] for x in msg)
+    # print(msg)
 
-    msg = ':'.join(hex(ord(x))[2:] for x in msg)
-    print(msg)
-    #nt.NTRPCoder.encode(packet)
-    # rmg = RadioManager()
-    # rmg.radioSearch()
-    # time.sleep(2)
-    # rmg.radioClose()
+
+    rmg = RadioManager()
+    rmg.radioSearch()
+    time.sleep(1)
+    radio = rmg.availableRadios[0]
+    radio.port.write(byt)
+
+    time.sleep(1)
+    rmg.radioClose()

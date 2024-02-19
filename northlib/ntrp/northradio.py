@@ -113,7 +113,7 @@ class NorthRadio(NorthPort):
         while self.isActive:
             msg = self.receive()
             if msg == None: continue
-            print(msg)
+            print(hex(ord(msg)))
             #packet = NTRPCoder.decode(msg)
             #self.packetPipe(packet)
 
