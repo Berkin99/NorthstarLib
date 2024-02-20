@@ -92,6 +92,12 @@ class NorthPort(): # NORTH PORT SERIAL COM
             self.errorSerial()
             return None
 
+    def transmitBytes(self,bytes):
+        if not self.readySerial(): return None
+        self.mode = self.BUSY
+        self.port.write(bytes)
+        self.mode = self.READY
+
     def transmit(self, msg):
         if not self.readySerial(): return None
         self.mode = self.BUSY

@@ -73,7 +73,6 @@ class NorthRadio(NorthPort):
             time.sleep(0.01) 
             timer += 0.01
         
-        
         self.port.write(self.PAIR_DATA.encode())
         time.sleep(0.3)      #Wait remaining data
         self.port.read_all() #Clear the buffer
@@ -114,6 +113,7 @@ class NorthRadio(NorthPort):
             msg = self.receive()
             if msg == None: continue
             print(hex(ord(msg)))
+            #print(msg.decode())
             #packet = NTRPCoder.decode(msg)
             #self.packetPipe(packet)
 
