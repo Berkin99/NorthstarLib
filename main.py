@@ -2,36 +2,34 @@
 import northlib.ntrp as rmg
 from northlib.ntrp.ntrpbuffer import NTRPBuffer
 from northlib.ntrp.northradio import NorthRadio
+from northlib.ntrp.northpipe import NorthPipe
 import northlib.ntrp.ntrp as ntrp
-
+import sys
 import time
-import binascii
 
+TESTMESSAGE = "Computer Message"
 
-def radioRouter(byt):    
+def radioRouter():    
     rmg.radioSearch()
-    if rmg.availableRadios[0] == None: return
-
-def radioDirect(byt):    
+    
+def radioDirect():    
     radio = NorthRadio('COM6',9600)
-    radio.beginRadio()
-    radio.transmit(byt)
-    time.sleep(60)
-    radio.destroy()
-
-
-
-testmessage = "Computer Message"
+    rmg.availableRadios.append(radio)
 
 if __name__ == '__main__':
+    radioDirect()
+    if not rmg.availableRadios[0].beginRadio() :  sys.exit()
 
-    buf = NTRPBuffer(20)
+    time.sleep(2) 
+    mainpipe = NorthPipe(radio=rmg.availableRadios[0])
+    mainpipe.subPipe()
 
-    packet = ntrp.NTRPMessage()
-    packet.receiver = 'X'
-    packet.setHeader('GET')
-    # packet.dataID = testmessage.__len__()
-    # packet.data = testmessage.encode()
-    packet.dataID = 1
-    packet.data.append(99)
-    # byt = ntrp.NTRP_Unite(packet)
+    #mainpipe.transmitMSG(TESTMESSAGE)
+    mainpipe.transmitGET(1)
+    
+    time.sleep(1)
+    # while 1:
+    #     if mainpipe.buffer.isAvailable()>0:
+    #         ntrp.NTRP_LogMessage(mainpipe.buffer.read())
+
+    rmg.closeAvailableRadios()

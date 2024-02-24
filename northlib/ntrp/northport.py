@@ -57,7 +57,7 @@ class NorthPort(): # NORTH PORT SERIAL COM
         return [port.device for port in serial.tools.list_ports.comports()]
 
     def receive(self):
-        if self.mode != self.READY: return
+        if self.mode != self.READY: return None
         self.mode = self.BUSY
         try:
             if not (self.port.in_waiting > 0):
@@ -68,8 +68,7 @@ class NorthPort(): # NORTH PORT SERIAL COM
             return msg
         except serial.SerialException as error:
             self.errorSerial()
-        self.mode = self.READY
-        return None
+            return
 
     def receiveLine(self):
         if self.mode != self.READY: return
@@ -83,10 +82,8 @@ class NorthPort(): # NORTH PORT SERIAL COM
             return msg
         except serial.SerialException as error:
             self.errorSerial()
-
-        self.mode = self.READY
-        return None
-
+            return
+        
     def transmit(self,byt):
         if byt!= None:
             self.port.write(byt)

@@ -63,7 +63,7 @@ class NTRPMessage(NTRPPacket):
         super().__init__()
         self.talker      = '0'          #char
         self.receiver    = '0'          #char
-        self.packetsize  =  2           #int
+        self.packetsize  =  3           #int
         
 
 # @param raw_bytearray = bytearray
@@ -87,9 +87,9 @@ def NTRP_Parse(raw_bytearray=bytearray):
     msg.dataID = int(raw_bytearray[5])
     
     for i in range(datasize):
-        msg.data[i] = raw_bytearray[i+5]
+        msg.data.append(raw_bytearray[i+6])
 
-    if chr(raw_bytearray[i+datasize]) != NTRP_ENDBYTE : return None
+    if chr(raw_bytearray[msg.packetsize+4]) != NTRP_ENDBYTE : return None
     return msg
 
 # @param message = NTRPMessage

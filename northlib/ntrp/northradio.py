@@ -53,19 +53,22 @@ class NorthRadio(NorthPort):
         if self.mode == self.READY:
             self.isActive = True
             self.rxThread = threading.Thread(target=self.rxProcess,daemon=False)
-            self.rxThread.start() 
+            self.rxThread.start()
+            return True
+        return False 
 
     def transmitNTRP(self,pck=ntrp.NTRPPacket, receiverid='0'):
         msg = ntrp.NTRPMessage()
         msg.talker = self.radioid
         msg.receiver = receiverid
-        msg.packetsize = len(pck.data)+2
+        msg.packetsize = len(pck.data)+3
 
         msg.header = pck.header
         msg.dataID = pck.dataID
         msg.data = pck.data
-
+        ntrp.NTRP_LogMessage(msg)
         arr = ntrp.NTRP_Unite(msg)
+        print(ntrp.NTRP_bytes(arr))
         self.transmit(arr)
 
     def subPipe(self,_pipe):
@@ -83,37 +86,39 @@ class NorthRadio(NorthPort):
 
     def rxHandler(self,msg=ntrp.NTRPMessage):
         for pipe in self.pipes:
-            if pipe.id == msg.talkerID:
+            if pipe.id == msg.talker:
                 pipe.append(msg)
                 return
         
         self.logbuffer.append(msg)
 
     def rxProcess(self):        
-        while self.isActive:
+        while self.isActive and (self.mode != self.NO_CONNECTION):
             time.sleep(self.DEFAULT_WAITTIME)
             byt = self.receive()
             if byt == None: continue
             if byt != ntrp.NTRP_STARTBYTE.encode(): continue
             
             arr = bytearray()
-            arr.append(byt)
+            arr.append(byt[0])
 
             while self.port.in_waiting < 3: pass
 
-            arr.append(self.port.read())
-            arr.append(self.port.read())
-            packetsize = self.port.read()
+            arex = self.port.read(2)
+            arr.extend(arex)
+
+            packetsize = self.port.read(1)[0]
             arr.append(packetsize)
+
             while self.port.in_waiting < packetsize+1: pass
-            
-            for i in range(packetsize+1):
-                byt = self.port.read()
-                arr.append(byt)
+            arex = self.port.read(packetsize+1)
+            arr.extend(arex)
 
             msg = ntrp.NTRP_Parse(arr)
             print(ntrp.NTRP_bytes(arr))
-            self.rxHandler(msg) 
+            
+            if msg != None:
+                self.rxHandler(msg) 
 
 
     def destroy(self):

@@ -9,8 +9,8 @@ __all__ = ['NorthPipe','NorthNRF']
 
 class NorthPipe():
 
-    def __init__(self, radio = NorthRadio):
-        self.id = 'X'                    #uavID
+    def __init__(self, _id = 'X', radio = NorthRadio):
+        self.id = _id                    #uavID
         self.radio = radio                 
         self.buffer = NTRPBuffer(10)
         self.txpck = ntrp.NTRPPacket()
@@ -19,27 +19,32 @@ class NorthPipe():
         self.buffer.append(msg)
 
     def subPipe(self,identify=False):
-        index = self.radio.subPipe()
+        index = self.radio.subPipe(self)
         if identify: self.id = index
 
-    def txpck(self, header):
-        self.txpck = ntrp.NTRPPacket()
-        self.txpck.setHeader(header)
+    def txpacket(self, header):
+        txpk = ntrp.NTRPPacket()
+        txpk.setHeader(header)
+        return txpk
 
     def transmitNAK(self):               
-        self.txpck = self.txpck('NAK')
+        self.txpck = self.txpacket('NAK')
         self.radio.transmitNTRP(self.txpck,self.id)     
 
     def transmitACK(self):
-        self.txpck = self.txpck('ACK')
+        self.txpck = self.txpacket('ACK')
         self.radio.transmitNTRP(self.txpck,self.id)     
 
     def transmitMSG(self,msg=str):        
-        self.txpck = self.txpck('MSG')
+        self.txpck = self.txpacket('MSG')
         self.txpck.data = msg.encode()
         self.txpck.dataID = len(self.txpck.data)        
         self.radio.transmitNTRP(self.txpck,self.id)     
 
+    def transmitGET(self,dataid):
+        self.txpck = self.txpacket('GET')
+        self.dataID = dataid
+        self.radio.transmitNTRP(self.txpck,self.id)
 
 bandwidth_e = (250,1000,2000) #kbps
 
@@ -51,12 +56,14 @@ class NorthNRF(NorthPipe):
 
     def __init__(self,radioindex = 0, ch = 0, bandwidth = NRF_1000KBPS, address = '300'):
         super().__init__(nt.availableRadios[radioindex])
-        self.identify()
         
         self.setCh (ch)
         self.setBandwidth(bandwidth)
         self.setAddress(address)
         self.isActive = True
+
+        self.subPipe(True)
+        #self.openPipe()
     
     def setCh(self,ch):
         self.channel = ch
