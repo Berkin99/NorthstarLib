@@ -14,7 +14,7 @@ __all__ = ['Commander']
 
 class Commander():
     def __init__(self) -> None:
-        pass
-
+        self.radio = None
+    
     #def set POSITION
     #def set MODE MANUAL

@@ -1,6 +1,5 @@
 
-import northlib.ntrp
-from northlib.ntrp import RadioManager
+import northlib.ntrp as rmg
 from northlib.ntrp.northport import NorthPort
 from northlib.ntrp.northradio import NorthRadio
 import northlib.ntrp.ntrp as ntrp
@@ -9,13 +8,9 @@ import time
 import binascii
 
 
-def radioRouter(byt):
-    # rmg = RadioManager()
-    # rmg.radioSearch()
-    # time.sleep(0.1)
-    # if len(rmg.availableRadios)<1: return
-    # radio = rmg.availableRadios[0]
-    pass
+def radioRouter(byt):    
+    rmg.radioSearch()
+    if rmg.availableRadios[0] == None: return
 
 def radioDirect(byt):    
     radio = NorthRadio('COM6',9600)
@@ -24,17 +19,6 @@ def radioDirect(byt):
     time.sleep(60)
     radio.destroy()
 
-def byteprint(byt):
-    msg = binascii.hexlify(byt)
-    txt = "/x"
-    ct = 0
-    for ch in msg:
-        if ct == 2: 
-            txt += "/x"
-            ct = 0
-        txt += chr(ch).upper()
-        ct+=1
-    print(txt)
 
 
 testmessage = "Computer Message"

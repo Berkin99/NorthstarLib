@@ -12,6 +12,7 @@ __author__ = 'Yeniay RD'
 __all__ = ['NTRPHeader_e, NTRPRouterHeader_e, NTRPMessage']
 
 from enum import Enum
+import binascii
 
 NTRP_SYNC_DATA  = "*NC"
 NTRP_PAIR_DATA  = "*OK"
@@ -35,15 +36,11 @@ class NTRPHeader_e(Enum):
     CLOSEPIPE     = 8
     EXIT          = 9
 
-class NTRPMessage():
-
+class NTRPPacket():
+    MAX_PACKET_SIZE = 28
     MAX_DATA_SIZE = 26
 
-    def __init__(self):
-        self.talker      = '0'          #char
-        self.receiver    = '0'          #char
-        self.packetsize  =  0           #int
-
+    def __init__(self) -> None:
         #NTRP_Packet_t
         self.header  = NTRPHeader_e.ACK     #cmd or routercmd
         self.dataID  = 0                    #data id or pipeno
@@ -59,6 +56,16 @@ class NTRPMessage():
     def setDataID(self,dataid):        
         self.dataID = dataid
 
+class NTRPMessage(NTRPPacket):
+    MAX_MESSAGE_SIZE = 32
+
+    def __init__(self):
+        self.talker      = '0'          #char
+        self.receiver    = '0'          #char
+        self.packetsize  =  2           #int
+        super.__init__()
+
+
 # @param raw_bytearray = bytearray
 # if error : returns None 
 # return NTRPMessage 
@@ -67,7 +74,7 @@ def NTRP_Parse(raw_bytearray=bytearray):
     msg = NTRPMessage()
     msg.talker   = chr(raw_bytearray[1])
     msg.receiver = chr(raw_bytearray[2])
-    msg.packetsize =   raw_bytearray[3]
+    msg.packetsize = int(raw_bytearray[3])
 
     if(msg.packetsize<2 or msg.packetsize>NTRP_MAX_PACKET_SIZE) : return None 
     datasize = msg.packetsize-2
@@ -77,7 +84,7 @@ def NTRP_Parse(raw_bytearray=bytearray):
             msg.header = header
             break
 
-    msg.dataID = raw_bytearray[5]
+    msg.dataID = int(raw_bytearray[5])
     
     for i in range(datasize):
         msg.data[i] = raw_bytearray[i+5]
@@ -104,3 +111,23 @@ def NTRP_Unite(message=NTRPMessage):
 
     arr.append(ord(NTRP_ENDBYTE))
     return arr
+
+def NTRP_LogMessage(message=NTRPMessage):
+    print("TALKERID: ",message.talker)
+    print("RECEIVERID: ",message.receiver)
+    print("PACKETLEN: ",message.packetsize)
+    print("HEADER: ", message.header.name)
+    print("DATID: ", message.dataID)
+    print("DATA: ", NTRP_bytes(message.data))
+
+def NTRP_bytes(byt):
+    msg = binascii.hexlify(byt)
+    txt = "/x"
+    ct = 0
+    for ch in msg:
+        if ct == 2: 
+            txt += "/x"
+            ct = 0
+        txt += chr(ch).upper()
+        ct+=1
+    return txt

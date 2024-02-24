@@ -9,7 +9,7 @@
 #   Research and Development Team
 
 import time
-
+import northlib.ntrp.ntrp as ntrp
 __author__ = 'Yeniay RD'
 __all__ = ['NTRPBuffer']
 
@@ -18,8 +18,8 @@ class NTRPBuffer(): # NORTH BUFFER lIFO
     def __init__(self, size=30):
 
         self.rxbuffer = []
-        for i in range(size+1):self.rxbuffer.append("")
-
+        for i in range(size+1):self.rxbuffer.append(ntrp.NTRPMessage())
+        
         self.rxsize = size+1
         self.index = 1
         self.mutex = False
