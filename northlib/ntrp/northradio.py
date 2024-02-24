@@ -56,14 +56,12 @@ class NorthRadio(NorthPort):
 
     DEFAULT_BAUD = 115200
 
-    def __init__(self, com=None):
+    def __init__(self, com=None , baud=DEFAULT_BAUD):
 
-        super().__init__(com, self.DEFAULT_BAUD)
+        super().__init__(com, baud)
         self.logbuffer = NTRPBuffer(20)
         self.isSync = False
         self.pipes = []
-        self.syncRadio()
-        self.beginRadio()
 
     def syncRadio(self,timeout = 2):
         timer = 0.0
@@ -113,9 +111,7 @@ class NorthRadio(NorthPort):
         arr = ntrp.NTRP_Unite(msg)
         self.transmit(arr)
 
-    def rxProcess(self):
-        while self.isSync == False:
-            pass
+    def rxProcess(self):        
         while self.isActive:
             msg = self.receive()
             if msg == None: continue

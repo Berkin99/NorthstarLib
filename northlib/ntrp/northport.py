@@ -77,8 +77,8 @@ class NorthPort(): # NORTH PORT SERIAL COM
         try:
             if not (self.port.in_waiting > 0):
                 self.mode = self.READY 
-                return None                                 #If there is no rx data in port buffer
-            msg = self.port.readline()                      #Decode and return the data
+                return None                              
+            msg = self.port.readline()                    
             self.mode = self.READY
             return msg
         except serial.SerialException as error:
@@ -87,8 +87,8 @@ class NorthPort(): # NORTH PORT SERIAL COM
         self.mode = self.READY
         return None
 
-    def transmit(self,bytes):
-        self.port.write(bytes)
+    def transmit(self,byt):
+        self.port.write(byt)
 
     def destroy(self):
         self.mode = self.NO_CONNECTION
