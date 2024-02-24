@@ -1,6 +1,6 @@
 
 import northlib.ntrp as rmg
-from northlib.ntrp.northport import NorthPort
+from northlib.ntrp.ntrpbuffer import NTRPBuffer
 from northlib.ntrp.northradio import NorthRadio
 import northlib.ntrp.ntrp as ntrp
 
@@ -25,6 +25,8 @@ testmessage = "Computer Message"
 
 if __name__ == '__main__':
 
+    buf = NTRPBuffer(20)
+
     packet = ntrp.NTRPMessage()
     packet.receiver = 'X'
     packet.setHeader('GET')
@@ -32,5 +34,4 @@ if __name__ == '__main__':
     # packet.data = testmessage.encode()
     packet.dataID = 1
     packet.data.append(99)
-    byt = ntrp.NTRP_Unite(packet)
-    
+    # byt = ntrp.NTRP_Unite(packet)

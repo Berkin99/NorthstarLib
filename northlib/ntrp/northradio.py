@@ -12,30 +12,32 @@ import time
 import threading
 
 import northlib.ntrp.ntrp as ntrp
-from   northlib.ntrp.northport  import NorthPort
-from   northlib.ntrp.ntrpbuffer import NTRPBuffer
-
+from northlib.ntrp.northport import NorthPort
+from northlib.ntrp.ntrpbuffer import NTRPBuffer
+ 
 __author__ = 'Yeniay RD'
-__all__ = ['NorthRadio','NorthPipe']
+__all__ = ['NorthRadio']
 
 class NorthRadio(NorthPort):
 
     DEFAULT_BAUD = 115200
+    DEFAULT_WAITTIME = 0.01
 
     def __init__(self, com=None , baud=DEFAULT_BAUD):
         super().__init__(com, baud)
         self.logbuffer = NTRPBuffer(20)
         self.isSync = False
         self.pipes = []
-    
+        self.radioid = ntrp.NTRP_MASTER_ID
+
     def syncRadio(self,timeout = 2):
         timer = 0.0
         msg = ''
         while self.isSync == False and timer<timeout:
             temp = self.receive()
             if temp == None:
-                time.sleep(0.01) 
-                timer += 0.01
+                time.sleep(self.DEFAULT_WAITTIME) 
+                timer += self.DEFAULT_WAITTIME
                 continue
 
             msg += chr(temp)
@@ -53,10 +55,10 @@ class NorthRadio(NorthPort):
             self.rxThread = threading.Thread(target=self.rxProcess,daemon=False)
             self.rxThread.start() 
 
-    def transmitNTRP(self,pck=ntrp.NTRPPacket,receiver='0'):
+    def transmitNTRP(self,pck=ntrp.NTRPPacket, receiverid='0'):
         msg = ntrp.NTRPMessage()
-        msg.talker = ntrp.NTRP_MASTER_ID
-        msg.receiver = receiver 
+        msg.talker = self.radioid
+        msg.receiver = receiverid
         msg.packetsize = len(pck.data)+2
 
         msg.header = pck.header
@@ -66,28 +68,52 @@ class NorthRadio(NorthPort):
         arr = ntrp.NTRP_Unite(msg)
         self.transmit(arr)
 
-    def subPipe(self,pipe):
-        self.pipes.append(pipe)
+    def subPipe(self,_pipe):
+        for i in range(len(self.pipes)):
+            if self.pipes[i]== None:
+                self.pipes = _pipe 
+                return i             #Return pipe index&id
+
+        self.pipes.append(_pipe)     #Subscribe to the pipes
+        return len(self.pipes)       #Return pipe index&id
 
     def unsubPipe(self,_pipe):
         for pipe in self.pipes:
-            if pipe.id == _pipe.id: self.pipes.remove(pipe)
+            if pipe.id == _pipe.id: pipe = None 
+
+    def rxHandler(self,msg=ntrp.NTRPMessage):
+        for pipe in self.pipes:
+            if pipe.id == msg.talkerID:
+                pipe.append(msg)
+                return
+        
+        self.logbuffer.append(msg)
 
     def rxProcess(self):        
         while self.isActive:
+            time.sleep(self.DEFAULT_WAITTIME)
             byt = self.receive()
             if byt == None: continue
             if byt != ntrp.NTRP_STARTBYTE.encode(): continue
             
-            arr = bytearray
-            msg = None
-            while(msg==None):
-                arr.append(byt)
-                msg = ntrp.NTRP_Parse(arr)
-                byt = self.receive()
+            arr = bytearray()
+            arr.append(byt)
 
+            while self.port.in_waiting < 3: pass
+
+            arr.append(self.port.read())
+            arr.append(self.port.read())
+            packetsize = self.port.read()
+            arr.append(packetsize)
+            while self.port.in_waiting < packetsize+1: pass
+            
+            for i in range(packetsize+1):
+                byt = self.port.read()
+                arr.append(byt)
+
+            msg = ntrp.NTRP_Parse(arr)
             print(ntrp.NTRP_bytes(arr))
-            self.logbuffer.append(msg)
+            self.rxHandler(msg) 
 
 
     def destroy(self):

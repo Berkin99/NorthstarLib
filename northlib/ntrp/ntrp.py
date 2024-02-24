@@ -40,7 +40,7 @@ class NTRPPacket():
     MAX_PACKET_SIZE = 28
     MAX_DATA_SIZE = 26
 
-    def __init__(self) -> None:
+    def __init__(self):
         #NTRP_Packet_t
         self.header  = NTRPHeader_e.ACK     #cmd or routercmd
         self.dataID  = 0                    #data id or pipeno
@@ -60,11 +60,11 @@ class NTRPMessage(NTRPPacket):
     MAX_MESSAGE_SIZE = 32
 
     def __init__(self):
+        super().__init__()
         self.talker      = '0'          #char
         self.receiver    = '0'          #char
         self.packetsize  =  2           #int
-        super.__init__()
-
+        
 
 # @param raw_bytearray = bytearray
 # if error : returns None 

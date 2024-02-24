@@ -1,19 +1,27 @@
 
 import northlib.ntrp.ntrp as ntrp
 from northlib.ntrp.ntrpbuffer import NTRPBuffer
-from northlib.ntrp.northradio import NorthRadio
+from northlib.ntrp.northradio import NorthRadio 
+import northlib.ntrp as nt
 
 __author__ = 'Yeniay RD'
 __all__ = ['NorthPipe','NorthNRF']
 
-
 class NorthPipe():
+
     def __init__(self, radio = NorthRadio):
         self.id = 'X'                    #uavID
         self.radio = radio                 
         self.buffer = NTRPBuffer(10)
         self.txpck = ntrp.NTRPPacket()
     
+    def append(self,msg):
+        self.buffer.append(msg)
+
+    def subPipe(self,identify=False):
+        index = self.radio.subPipe()
+        if identify: self.id = index
+
     def txpck(self, header):
         self.txpck = ntrp.NTRPPacket()
         self.txpck.setHeader(header)
@@ -33,11 +41,7 @@ class NorthPipe():
         self.radio.transmitNTRP(self.txpck,self.id)     
 
 
-
-
 bandwidth_e = (250,1000,2000) #kbps
-
-
 
 class NorthNRF(NorthPipe):
         
@@ -45,8 +49,10 @@ class NorthNRF(NorthPipe):
     NRF_1000KBPS = 1000
     NRF_2000KBPS = 2000
 
-    def __init__(self, ch = 0, bandwidth = NRF_1000KBPS, address = '300'):
-        self.id = 0
+    def __init__(self,radioindex = 0, ch = 0, bandwidth = NRF_1000KBPS, address = '300'):
+        super().__init__(nt.availableRadios[radioindex])
+        self.identify()
+        
         self.setCh (ch)
         self.setBandwidth(bandwidth)
         self.setAddress(address)
@@ -67,7 +73,8 @@ class NorthNRF(NorthPipe):
     def setid(self,index):
         self.id = index
 
-
+    def openPipe(self):
+        pass
 
     def destroy(self):
         #TODO: Close the port with close port message

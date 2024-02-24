@@ -13,13 +13,13 @@ import northlib.ntrp.ntrp as ntrp
 __author__ = 'Yeniay RD'
 __all__ = ['NTRPBuffer']
 
-class NTRPBuffer(): # NORTH BUFFER lIFO
+class NTRPBuffer(): # NORTH BUFFER LIFO
     
     def __init__(self, size=30):
 
         self.rxbuffer = []
-        for i in range(size+1):self.rxbuffer.append(ntrp.NTRPMessage())
-        
+        for i in range(size+1):self.rxbuffer.append(None)
+
         self.rxsize = size+1
         self.index = 1
         self.mutex = False
@@ -54,8 +54,8 @@ class NTRPBuffer(): # NORTH BUFFER lIFO
     
     def isAvailable(self):
         dif = self.index - self.sp
-        if dif == 0: return 0
-        return abs(dif) 
+        if dif == 1: return 0
+        return abs(dif)-1 
     
     def getBuffer(self):
         return self.rxbuffer
