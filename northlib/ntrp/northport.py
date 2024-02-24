@@ -11,7 +11,6 @@
 import serial
 import serial.tools.list_ports
 import time
-from northlib.ntrp.ntrpbuffer import NTRPBuffer
 
 __author__ = 'Yeniay RD'
 __all__ = ['NorthPort']
@@ -49,13 +48,6 @@ class NorthPort(): # NORTH PORT SERIAL COM
         except serial.SerialException as error:
             self.errorSerial() #Serial Port Problem 
     
-    def readySerial(self):
-        if self.port == None or self.mode==self.NO_CONNECTION: return False
-        time.sleep(self.PORTDELAY)
-        while self.mode == self.BUSY:
-            time.sleep(self.PORTDELAY)
-        return True
-
     def errorSerial(self):
             self.mode = self.NO_CONNECTION
             self.port = None 
@@ -65,21 +57,22 @@ class NorthPort(): # NORTH PORT SERIAL COM
         return [port.device for port in serial.tools.list_ports.comports()]
 
     def receive(self):
-        if not self.readySerial(): return None
+        if self.mode != self.READY: return
         self.mode = self.BUSY
         try:
             if not (self.port.in_waiting > 0):
                 self.mode = self.READY 
-                return None  #If there is no rx data in port buffer
-            msg = self.port.read(1)                         #Decode and return the data
+                return None         #If there is no rx data in port buffer
+            msg = self.port.read(1) #Decode and return the data
             self.mode = self.READY
             return msg
         except serial.SerialException as error:
             self.errorSerial()
-            return None
-    
+        self.mode = self.READY
+        return None
+
     def receiveLine(self):
-        if not self.readySerial(): return None
+        if self.mode != self.READY: return
         self.mode = self.BUSY
         try:
             if not (self.port.in_waiting > 0):
@@ -90,20 +83,13 @@ class NorthPort(): # NORTH PORT SERIAL COM
             return msg
         except serial.SerialException as error:
             self.errorSerial()
-            return None
 
-    def transmitBytes(self,bytes):
-        if not self.readySerial(): return None
-        self.mode = self.BUSY
+        self.mode = self.READY
+        return None
+
+    def transmit(self,bytes):
         self.port.write(bytes)
-        self.mode = self.READY
 
-    def transmit(self, msg):
-        if not self.readySerial(): return None
-        self.mode = self.BUSY
-        self.port.write(msg.encode())
-        self.mode = self.READY
-    
     def destroy(self):
         self.mode = self.NO_CONNECTION
         if self.port != None:

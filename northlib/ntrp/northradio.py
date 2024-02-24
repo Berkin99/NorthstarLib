@@ -10,10 +10,9 @@
 
 import time
 import threading
-from northlib.ntrp.northport  import NorthPort
-from northlib.ntrp.ntrpstack  import NTRPCoder
-from northlib.ntrp.ntrpstack  import NTRPPacket
-from northlib.ntrp.ntrpbuffer import NTRPBuffer
+import northlib.ntrp.ntrp as ntrp
+from   northlib.ntrp.northport  import NorthPort
+from   northlib.ntrp.ntrpbuffer import NTRPBuffer
 
 bandwidth_e = (250,1000,2000) #kbps
 
@@ -21,7 +20,7 @@ __author__ = 'Yeniay RD'
 __all__ = ['NorthRadio','NorthPipe']
 
 class NorthPipe():
-    
+        
     NRF_250KBPS  = 250
     NRF_1000KBPS = 1000
     NRF_2000KBPS = 2000
@@ -49,11 +48,13 @@ class NorthPipe():
     def setid(self,index):
         self.id = index
 
+    def destroy(self):
+        #TODO: Close the port with close port message
+        self.isActive = False
+
 class NorthRadio(NorthPort):
 
-    DEFAULT_BAUD    = 115200
-    SYNC_DATA       = "*NC"
-    PAIR_DATA       = "*OK"
+    DEFAULT_BAUD = 115200
 
     def __init__(self, com=None):
 
@@ -66,14 +67,17 @@ class NorthRadio(NorthPort):
 
     def syncRadio(self,timeout = 2):
         timer = 0.0
+        msg = ''
         while self.isSync == False or timer>=timeout:
-            data = self.port.read(8)
-            data = data.decode()
-            if self.SYNC_DATA in data: self.isSync = True
-            time.sleep(0.01) 
-            timer += 0.01
+            temp = self.receive()
+            if temp == None:
+                time.sleep(0.01) 
+                timer += 0.01
+                continue
+            msg+=temp.decode()
+            if ntrp.NTRP_SYNC_DATA in msg: self.isSync = True
         
-        self.port.write(self.PAIR_DATA.encode())
+        self.transmit(ntrp.NTRP_PAIR_DATA.encode())
         time.sleep(0.3)      #Wait remaining data
         self.port.read_all() #Clear the buffer
         
@@ -84,6 +88,9 @@ class NorthRadio(NorthPort):
             self.rxThread.start() 
 
     def openPipe(self,pipe):
+        index = len(self.pipes)
+        msg  = ntrp.NTRPMessage()
+        msg.setHeader('RCMD') 
         #Transmit open pipe message to dongle
         #Receive the index of pipe
         #pipe.id = 
@@ -100,11 +107,11 @@ class NorthRadio(NorthPort):
                 pipe.buffer.append(packet)
                 return 
     
-    def sendPipe(self,pipe,packet):
-        packet.sender = 0
-        packet.receiver = pipe.id
-        msg = NTRPCoder.encode(packet)
-        self.transmit(msg)
+    def sendPipe(self, pipe=NorthPipe, msg=ntrp.NTRPMessage):
+        msg.talker = '0'
+        msg.receiver = pipe.id
+        arr = ntrp.NTRP_Unite(msg)
+        self.transmit(arr)
 
     def rxProcess(self):
         while self.isSync == False:

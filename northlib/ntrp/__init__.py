@@ -8,9 +8,8 @@
 #   2024 Yeniay Uav Flight Control Systems
 #   Research and Development Team
 
+import northlib.ntrp.ntrp as ntrp
 from northlib.ntrp.ntrpbuffer import NTRPBuffer
-from northlib.ntrp.ntrpstack import NTRPCoder
-from northlib.ntrp.ntrpstack import NTRPPacket
 from northlib.ntrp.northport import NorthPort
 from northlib.ntrp.northradio import NorthRadio
 
@@ -29,20 +28,21 @@ class RadioManager():
     def radioSearch(self):
         if self.isInit: return
         coms = NorthPort.getAvailablePorts()
-        print(coms)
+        print("RadioManager : COM LIST = ", coms)
+
         for com in coms:
-            ser = serial.Serial(com,NorthRadio.DEFAULT_BAUD,timeout=1)
+            ser = serial.Serial(com,NorthRadio.DEFAULT_BAUD,timeout=3)
             testdata = ""
             while 1:
                 try:
-                    if(ser.in_waiting>8):
-                        testdata = ser.read(8).decode()
+                    if(ser.in_waiting>6):
+                        testdata = ser.read(6).decode()
                         break;
                 except UnicodeDecodeError as e:
                     continue
 
-            if NorthRadio.SYNC_DATA in testdata:
-                print('NorthRadio found : '+com)
+            if ntrp.NTRP_SYNC_DATA in testdata:
+                print('RadioManager found : '+ com)
                 ser.read_all()
                 ser.close()
                 self.availableRadios.append(NorthRadio(com))
@@ -52,6 +52,7 @@ class RadioManager():
     def radioClose(self):
         for radio in self.availableRadios:
             radio.destroy()
+        print("RadioManager : close")
         self.availableRadios.clear()
         self.isInit = False
     
