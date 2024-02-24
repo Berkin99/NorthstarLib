@@ -1,3 +1,12 @@
+#!/usr/bin/env pythonh
+# -*- coding: utf-8 -*-
+#  __  __ ____ _  __ ____ ___ __  __
+#  \ \/ // __// |/ //  _// _ |\ \/ /
+#   \  // _/ /    /_/ / / __ | \  / 
+#   /_//___//_/|_//___//_/ |_| /_/  
+# 
+#   2024 Yeniay Uav Flight Control Systems
+#   Research and Development Team
 
 import northlib.ntrp.ntrp as ntrp
 from northlib.ntrp.ntrpbuffer import NTRPBuffer
@@ -12,11 +21,11 @@ class NorthPipe():
     def __init__(self, _id = 'X', radio = NorthRadio):
         self.id = _id                    #uavID
         self.radio = radio                 
-        self.buffer = NTRPBuffer(10)
+        self.rxbuffer = NTRPBuffer(10)
         self.txpck = ntrp.NTRPPacket()
     
     def append(self,msg):
-        self.buffer.append(msg)
+        self.rxbuffer.append(msg)
 
     def subPipe(self,identify=False):
         index = self.radio.subPipe(self)
@@ -41,11 +50,23 @@ class NorthPipe():
         self.txpck.dataID = len(self.txpck.data)        
         self.radio.transmitNTRP(self.txpck,self.id)     
 
-    def transmitGET(self,dataid):
+    def transmitGET(self,dataid=int):
         self.txpck = self.txpacket('GET')
-        self.dataID = dataid
+        self.txpck.dataID = dataid
         self.radio.transmitNTRP(self.txpck,self.id)
 
+    def transmitSET(self,dataid=int,databytes=bytearray):
+        self.txpck = self.txpacket('SET')
+        self.txpck.dataID = dataid
+        self.txpck.data = databytes   
+        self.radio.transmitNTRP(self.txpck,self.id)
+        
+    def transmitCMD(self,channels=bytearray):
+        self.txpck = self.txpacket('CMD')
+        self.txpck.dataID = 0
+        self.txpck.data = channels   
+        self.radio.transmitNTRP(self.txpck,self.id)
+        
 bandwidth_e = (250,1000,2000) #kbps
 
 class NorthNRF(NorthPipe):
