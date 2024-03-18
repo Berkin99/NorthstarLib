@@ -13,7 +13,11 @@ import northlib.ntrp.ntrp as ntrp
 __author__ = 'Yeniay RD'
 __all__ = ['NTRPBuffer']
 
-class NTRPBuffer(): # NORTH BUFFER LIFO
+class NTRPBuffer():
+
+    """ 
+    LIFO Ring buffer 
+    """
     
     def __init__(self, size=30):
 

@@ -7,8 +7,10 @@ from northlib.ntrp.ntrpbuffer import NTRPBuffer
 from northlib.ntrp.northradio import NorthRadio
 from northlib.ntrp.northpipe import NorthPipe
 import northlib.ntrp.ntrp as ntrp
-
 from northlib.ncmd.controller import Controller
+
+
+
 
 TESTMESSAGE = "Computer Message"
 

@@ -18,12 +18,15 @@ __all__ = ['NorthPort']
 baudrate_e = (0,9600,19200,38400,57600,115200)
 
 class NorthPort(): # NORTH PORT SERIAL COM
-    
+    """
+    NTRP Serial Com Port
+    Handles the serial com object.
+    Prevents com call intersections. 
+    """
     AUTOBAUDRATE    = 0
     NO_CONNECTION   = 0
     READY           = 1
     BUSY            = 2
-    PORTDELAY       = 0.01 #10ms Delay
     
     def __init__(self, com=None, baudrate=AUTOBAUDRATE):
         self.mode = self.NO_CONNECTION
@@ -62,8 +65,8 @@ class NorthPort(): # NORTH PORT SERIAL COM
         try:
             if not (self.port.in_waiting > 0):
                 self.mode = self.READY 
-                return None         #If there is no rx data in port buffer
-            msg = self.port.read(1) #Decode and return the data
+                return None         
+            msg = self.port.read(1) 
             self.mode = self.READY
             return msg
         except serial.SerialException as error:

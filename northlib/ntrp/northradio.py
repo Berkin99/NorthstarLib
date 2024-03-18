@@ -20,8 +20,21 @@ __all__ = ['NorthRadio']
 
 class NorthRadio(NorthPort):
 
+    """
+    NTRP Radio
+    North radio object for each RF module 
+    
+    > Syncronization with exteral dongle.(Optional) 
+    > NTRP Pipes can subscribe the radio channel for Rx interrupt & Tx driver.
+    > RX thread continuously reads the serial port. If there is a bytearray in the line;
+        - Parses the data to NTRP Message 
+        - Looks for receiver address in subscribed pipes
+        - If found a subscriber calls append(packet) to pipe buffer  
+    >TX driver gets NTRP Packet, it makes it NTRP Message, compiles Message to byte array,
+    transmits byte array trough serial port.
+    """
     DEFAULT_BAUD = 115200
-    DEFAULT_WAITTIME = 0.01
+    WAIT_TICK = 0.01
 
     def __init__(self, com=None , baud=DEFAULT_BAUD):
         super().__init__(com, baud)
@@ -36,8 +49,8 @@ class NorthRadio(NorthPort):
         while self.isSync == False and timer<timeout:
             temp = self.receive()
             if temp == None:
-                time.sleep(self.DEFAULT_WAITTIME) 
-                timer += self.DEFAULT_WAITTIME
+                time.sleep(self.WAIT_TICK) 
+                timer += self.WAIT_TICK
                 continue
 
             msg += chr(temp)
@@ -94,7 +107,7 @@ class NorthRadio(NorthPort):
 
     def rxProcess(self):        
         while self.isActive and (self.mode != self.NO_CONNECTION):
-            time.sleep(self.DEFAULT_WAITTIME)
+            time.sleep(self.WAIT_TICK)
             byt = self.receive()
             if byt == None: continue
             if byt != ntrp.NTRP_STARTBYTE.encode(): continue
@@ -115,7 +128,9 @@ class NorthRadio(NorthPort):
             arr.extend(arex)
 
             msg = ntrp.NTRP_Parse(arr)
-            print(ntrp.NTRP_bytes(arr))
+
+            #Print received ntrp message
+            print(ntrp.NTRP_bytes(arr))   
             
             if msg != None:
                 self.rxHandler(msg) 

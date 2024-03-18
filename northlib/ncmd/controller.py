@@ -19,9 +19,10 @@ __author__ = 'Yeniay RD'
 __all__ = ['Controller']
 
 class Controller():
+    """ Joystick Controller Class """
+    
     def __init__(self,pipe=NorthPipe):
-        #Set UAV Mode to CONTROLLER
-        #Wait ACK Message withtimeout
+
         self.pipe = pipe
         pygame.init()
         pygame.joystick.init()
@@ -29,7 +30,7 @@ class Controller():
         self.axis = [0,0,0,0]
 
         if pygame.joystick.get_count() > 0:
-            self.joystick = pygame.joystick.Joystick(0)  # İlk joystick'i alır
+            self.joystick = pygame.joystick.Joystick(0)  # First Founded JOYSTICK 
             self.joystick.init()
             self.isAlive = True
             self.controlThread = threading.Thread(target=self.controlProcess,daemon=False)
@@ -37,10 +38,15 @@ class Controller():
             
         else: print("Controller Not Found.")
 
+    def controlSwitch(self, mode = False):
+        pass
+        #Set UAV Mode to CONTROLLER
+        #Wait ACK Message withtimeout
+
     def controlProcess(self):
         ch_arr = bytearray(4)
         while self.isAlive:
-            pygame.event.pump()  # Sadece joystick eventlerini işler, diğerlerini ihmal eder
+            pygame.event.pump()  # Only Joystick process
             for i in range(4):
                 self.axis[i] = (int)(((self.joystick.get_axis(i)+1)*255)/2)
                 ch_arr = bytearray(self.axis)

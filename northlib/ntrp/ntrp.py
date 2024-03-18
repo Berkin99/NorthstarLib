@@ -65,7 +65,6 @@ class NTRPMessage(NTRPPacket):
         self.receiver    = '0'          #char
         self.packetsize  =  3           #int
         
-
 # @param raw_bytearray = bytearray
 # if error : returns None 
 # return NTRPMessage 

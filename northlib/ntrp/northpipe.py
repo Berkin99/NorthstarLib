@@ -8,6 +8,8 @@
 #   2024 Yeniay Uav Flight Control Systems
 #   Research and Development Team
 
+import time 
+
 import northlib.ntrp.ntrp as ntrp
 from northlib.ntrp.ntrpbuffer import NTRPBuffer
 from northlib.ntrp.northradio import NorthRadio 
@@ -18,18 +20,43 @@ __all__ = ['NorthPipe','NorthNRF']
 
 class NorthPipe():
 
+    """ 
+    NorthPipe Class 
+    It communicates with target agent in the RF Network
+    Transmit commands & rx buffer 
+    """
+
     def __init__(self, _id = 'X', radio = NorthRadio):
-        self.id = _id                    #uavID
+        self.id = _id                    # Agent ID
+
+        # The Pipe ID is should be same with target agent ID
+        # Agent ID is represents the rf adress when use NTRP_Router Dongle
+        # Agent ID identifies the target agent when use UART Lora Module
+            
         self.radio = radio                 
         self.rxbuffer = NTRPBuffer(10)
         self.txpck = ntrp.NTRPPacket()
-    
+        self.newdata = False
+
     def append(self,msg):
         self.rxbuffer.append(msg)
+        self.newdata = True
 
     def subPipe(self,identify=False):
         index = self.radio.subPipe(self)
         if identify: self.id = index
+
+    def waitConnection(self, timeout = 0.5):
+        self.transmitMSG("ACK Request")
+        self.newdata = False
+
+        timer = 0.0
+        while(self.newdata == False and timer<=timeout):
+            time.sleep(0.01)
+            timer +=   0.01
+            
+        if(self.newdata == False): return 0.0
+        return timer
 
     def txpacket(self, header):
         txpk = ntrp.NTRPPacket()
