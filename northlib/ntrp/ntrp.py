@@ -31,10 +31,12 @@ class NTRPHeader_e(Enum):
     CMD 		= 3 #Commander + CMD ID + COMMANDARGV
     GET 		= 4 #Param Get + ParamID
     SET 		= 5 #Param Set + ParamID + DATA
-    RUN		    = 6 #Func Run  + FuncID 
-    OPENPIPE      = 7
-    CLOSEPIPE     = 8
-    EXIT          = 9
+    LOG         = 6
+    RUN		    = 7 #Func Run  + FuncID 
+    
+    OPENPIPE    = 21 #PipeID + (ch,speedid,address[5])    
+    CLOSEPIPE   = 22
+    EXIT        = 23
 
 class NTRPPacket():
     MAX_PACKET_SIZE = 28

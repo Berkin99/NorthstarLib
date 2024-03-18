@@ -10,8 +10,6 @@ import northlib.ntrp.ntrp as ntrp
 from northlib.ncmd.controller import Controller
 
 
-
-
 TESTMESSAGE = "Computer Message"
 
 def radioRouter():    

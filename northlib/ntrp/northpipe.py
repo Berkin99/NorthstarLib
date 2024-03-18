@@ -22,18 +22,25 @@ class NorthPipe():
 
     """ 
     NorthPipe Class 
-    It communicates with target agent in the RF Network
-    Transmit commands & rx buffer 
+    
+    >It communicates with target agent in the RF Network
+    >Transmit commands
+    >Receive Buffer & newdata callback
+
+    SELF -> UART LORA MODULE 
+    NRF CLASS -> NRF ROUTER
     """
 
-    def __init__(self, _id = 'X', radio = NorthRadio):
-        self.id = _id                    # Agent ID
+    def __init__(self, pipe_id = 'X', radio = NorthRadio):
+        self.id = pipe_id                    # Agent ID
 
         # The Pipe ID is should be same with target agent ID
         # Agent ID is represents the rf adress when use NTRP_Router Dongle
         # Agent ID identifies the target agent when use UART Lora Module
             
-        self.radio = radio                 
+        self.radio = radio            
+        self.radio.subPipe(self)
+
         self.rxbuffer = NTRPBuffer(10)
         self.txpck = ntrp.NTRPPacket()
         self.newdata = False
@@ -41,11 +48,7 @@ class NorthPipe():
     def append(self,msg):
         self.rxbuffer.append(msg)
         self.newdata = True
-
-    def subPipe(self,identify=False):
-        index = self.radio.subPipe(self)
-        if identify: self.id = index
-
+        
     def waitConnection(self, timeout = 0.5):
         self.transmitMSG("ACK Request")
         self.newdata = False
@@ -94,43 +97,61 @@ class NorthPipe():
         self.txpck.data = channels   
         self.radio.transmitNTRP(self.txpck,self.id)
         
-bandwidth_e = (250,1000,2000) #kbps
 
 class NorthNRF(NorthPipe):
         
-    NRF_250KBPS  = 250
-    NRF_1000KBPS = 1000
-    NRF_2000KBPS = 2000
+    NRF_250KBPS  = 0
+    NRF_1000KBPS = 1
+    NRF_2000KBPS = 2
 
-    def __init__(self,radioindex = 0, ch = 0, bandwidth = NRF_1000KBPS, address = '300'):
+    def __init__(self, radioindex = 0, ch = 0, bandwidth = NRF_1000KBPS, address = "E7E7E7E304"):
         super().__init__(nt.availableRadios[radioindex])
         
-        self.setCh (ch)
-        self.setBandwidth(bandwidth)
-        self.setAddress(address)
+        self.channel = ch                       #int
+        self.bandwidth = bandwidth              #int[0,1,2]
+        self.address = bytes.fromhex(address)   #bytearray[5]
+        if(len(self.address) != 5): raise ValueError()
+        
         self.isActive = True
 
-        self.subPipe(True)
-        #self.openPipe()
+        #If Use NRF Router module, Agents has nrf address instead of ID
+        #ID needs to be defined to identify the pipe, so get new tag from radio
+        self.id = self.radio.newPipeID() 
+        self.transmitOPENPIPE()
     
-    def setCh(self,ch):
+    def setChannel(self,ch):
         self.channel = ch
         return True
 
     def setBandwidth(self,bw):
-        if not bandwidth_e.__contains__(bw): return False
         self.bandwidth = bw
         return True
     
     def setAddress(self, address):
-        self.address = address
+        self.address = bytes.fromhex(address)
 
-    def setid(self,index):
-        self.id = index
+    def transmitOPENPIPE(self):
+        packet = ntrp.NTRPPacket()
+        packet.header = ntrp.NTRPHeader_e.OPENPIPE
+        packet.dataID = self.id
+        packet.data   = self.getNrfData()
 
-    def openPipe(self):
-        pass
+        self.radio.transmitNTRP(packet,ntrp.NTRP_ROUTER_ID)
+    
+    def transmitCLOSEPIPE(self):
+        packet = ntrp.NTRPPacket()
+        packet.header = ntrp.NTRPHeader_e.CLOSEPIPE
+        packet.dataID = self.id
+        self.radio.transmitNTRP(packet,ntrp.NTRP_ROUTER_ID)
 
+    def getNrfData(self):
+        arr = bytearray()
+        arr.append(self.channel)
+        arr.append(self.bandwidth)
+        arr.extend(self.address)
+        return arr
+    
+    
     def destroy(self):
         #TODO: Close the port with close port message
         self.isActive = False

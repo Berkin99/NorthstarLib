@@ -14,7 +14,8 @@ import threading
 import northlib.ntrp.ntrp as ntrp
 from northlib.ntrp.northport import NorthPort
 from northlib.ntrp.ntrpbuffer import NTRPBuffer
- 
+from northlib.ntrp.northpipe import NorthPipe
+
 __author__ = 'Yeniay RD'
 __all__ = ['NorthRadio']
 
@@ -22,9 +23,9 @@ class NorthRadio(NorthPort):
 
     """
     NTRP Radio
-    North radio object for each RF module 
+    North radio object for each NTRP_Dongle™ module 
     
-    > Syncronization with exteral dongle.(Optional) 
+    > Syncronization with exteral dongle.(Optional, lora module not respond to sync message)  
     > NTRP Pipes can subscribe the radio channel for Rx interrupt & Tx driver.
     > RX thread continuously reads the serial port. If there is a bytearray in the line;
         - Parses the data to NTRP Message 
@@ -33,6 +34,7 @@ class NorthRadio(NorthPort):
     >TX driver gets NTRP Packet, it makes it NTRP Message, compiles Message to byte array,
     transmits byte array trough serial port.
     """
+
     DEFAULT_BAUD = 115200
     WAIT_TICK = 0.01
 
@@ -84,18 +86,19 @@ class NorthRadio(NorthPort):
         print(ntrp.NTRP_bytes(arr))
         self.transmit(arr)
 
-    def subPipe(self,_pipe):
+    def subPipe(self,pipe=NorthPipe):
+        self.pipes.append(pipe)     #Subscribe to the pipes
+        
+    def unsubPipe(self,pipe_id):
         for i in range(len(self.pipes)):
-            if self.pipes[i]== None:
-                self.pipes = _pipe 
-                return i             #Return pipe index&id
-
-        self.pipes.append(_pipe)     #Subscribe to the pipes
-        return len(self.pipes)       #Return pipe index&id
-
-    def unsubPipe(self,_pipe):
-        for pipe in self.pipes:
-            if pipe.id == _pipe.id: pipe = None 
+            if self.pipes[i].id == pipe_id: self.pipes.pop(i)
+    
+    def newPipeID(self):
+        max_id_value = ord('1')
+        for i in range(len(self.pipes)):
+            test_id_value = ord(self.pipes[i].id)
+            if  test_id_value > max_id_value : max_id_value = test_id_value 
+        return chr(max_id_value+1)
 
     def rxHandler(self,msg=ntrp.NTRPMessage):
         for pipe in self.pipes:
@@ -104,6 +107,7 @@ class NorthRadio(NorthPort):
                 return
         
         self.logbuffer.append(msg)
+        ntrp.NTRP_LogMessage(msg)
 
     def rxProcess(self):        
         while self.isActive and (self.mode != self.NO_CONNECTION):
@@ -130,9 +134,9 @@ class NorthRadio(NorthPort):
             msg = ntrp.NTRP_Parse(arr)
 
             #Print received ntrp message
-            print(ntrp.NTRP_bytes(arr))   
-            
-            if msg != None:
+            if msg == None: 
+                print("NAK: " + ntrp.NTRP_bytes(arr))   
+            else:
                 self.rxHandler(msg) 
 
 

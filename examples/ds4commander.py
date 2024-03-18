@@ -4,39 +4,18 @@ import time
 import pygame
 from pygame.locals import *
 
+# Örnek bir hash fonksiyonu ile stringe bir ID atama
+def hash_string(string):
+    hash_value = 0
+    for char in string:
+        hash_value = (hash_value * 31 + ord(char)) % 256
+    return hash_value
 
-def commander():
-    ser = serial.Serial('COM16',9600)
+# Uzun bir string
+my_long_string = "Bu bir örnek uzun setring0"
 
-    pygame.init()
-    pygame.joystick.init()
-    if pygame.joystick.get_count() < 1:return
-    joystick = pygame.joystick.Joystick(0)
-    joystick.init()
+# Stringin hash değerini hesaplayarak bir ID oluşturuyoruz
+string_id = hash_string(my_long_string)
 
-    L3 = [0,0]
-    R3 = [0,0]
-    try: 
-        while(1):
-            for event in pygame.event.get():
-                if event.type == JOYAXISMOTION:
-                    if event.axis == 0:  # X ekseni (L3)
-                        L3[0] = int(joystick.get_axis(0)*127)
-                    elif event.axis == 1:  # Y ekseni (L3)
-                        L3[1] = int(joystick.get_axis(1)*127)
-                    elif event.axis == 2:  # X ekseni (R3)
-                        R3[0] = int(joystick.get_axis(2)*127)
-                    elif event.axis == 3:  # Y ekseni (R3)
-                        R3[1] = int(joystick.get_axis(3)*127)
-            msg = str(L3[0])+":"+str(L3[1])+":"+str(R3[0])+":"+str(R3[1])
-            print(msg)
-            ser.write(msg.encode())
-            time.sleep(0.03)
-    except serial.SerialException as e:
-        pass
-    pygame.quit()
-
-
-
-
-commander()
+print("Uzun String:", my_long_string)
+print("String ID'si:", string_id)
