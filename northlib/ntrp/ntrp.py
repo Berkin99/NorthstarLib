@@ -34,7 +34,7 @@ class NTRPHeader_e(Enum):
     LOG         = 6
     RUN		    = 7 #Func Run  + FuncID 
     
-    OPENPIPE    = 21 #PipeID + (ch,speedid,address[5])    
+    OPENPIPE    = 21 #PipeID + (channel,speedid,address[5])    
     CLOSEPIPE   = 22
     EXIT        = 23
 
