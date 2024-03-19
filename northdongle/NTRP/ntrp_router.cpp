@@ -66,9 +66,8 @@ void NTRP_Router::task(void){
     if(receiveMaster(&ntrp_message)){
         route(&ntrp_message);
     }
-
     /* Continously checks nrf buffer for catch a success ntrp_message */
-    if(receivePipe(&ntrp_message))
+    if(receivePipe(&ntrp_message)){
         route(&ntrp_message); 
     }
 }
@@ -154,16 +153,17 @@ void NTRP_Router::transmitPipeFast(uint8_t pipeid,const uint8_t* raw_sentence, u
 }
 
 uint8_t NTRP_Router::receivePipe(NTRP_Message_t* msg){
-    uint8_t pipe;
-    if(!nrf->available(&pipe))return 0;
-    debug("ReceivedNRF");
-    // nrf->read(_buffer,NTRP_MAX_MSG_SIZE);
-    // NTRP_PackParse(&msg->packet,_buffer);
+    uint8_t pipe = 0;
+    if(nrf->available(&pipe)){
+        nrf->read(_buffer,NTRP_MAX_MSG_SIZE);
+        NTRP_PackParse(&msg->packet,_buffer);
 
-    // msg->receiverID = NTRP_MASTER_ID;
-    // msg->talkerID = nrf_pipe[pipe].id;
-    // msg->packetsize = NTRP_MAX_PACKET_SIZE;
-    return 1;
+        msg->receiverID = NTRP_MASTER_ID;
+        msg->talkerID = nrf_pipe[pipe].id;
+        msg->packetsize = NTRP_MAX_PACKET_SIZE;
+        return 1;
+    }
+    return 0;
 }
     
 

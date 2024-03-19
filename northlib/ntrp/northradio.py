@@ -35,7 +35,7 @@ class NorthRadio(NorthPort):
     """
 
     DEFAULT_BAUD = 115200
-    WAIT_TICK = 0.01
+    WAIT_TICK = 0.0001
 
     def __init__(self, com=None , baud=DEFAULT_BAUD):
         super().__init__(com, baud)
@@ -105,13 +105,15 @@ class NorthRadio(NorthPort):
         return chr(max_id_value)
 
     def rxHandler(self,msg=ntrp.NTRPMessage):
+        
+        if(msg.header == ntrp.NTRPHeader_e.MSG):
+            print(self.com + ":/"+msg.talker+"> " + msg.data.decode('ascii',errors='ignore'))
+
         for pipe in self.pipes:
             if pipe.id == msg.talker:
                 pipe.append(msg)
                 return
 
-        if(msg.header == ntrp.NTRPHeader_e.MSG):
-            print(self.com + ":/"+msg.talker+"> " + msg.data.decode())
     
     def rxProcess(self):        
         while self.isActive and (self.mode != self.NO_CONNECTION):

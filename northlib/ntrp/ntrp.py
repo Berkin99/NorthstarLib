@@ -33,7 +33,7 @@ class NTRPHeader_e(Enum):
     SET 		= 5 #Param Set + ParamID + DATA
     LOG         = 6
     RUN		    = 7 #Func Run  + FuncID 
-    
+
     OPENPIPE    = 21 #PipeID + (channel,speedid,address[5])    
     CLOSEPIPE   = 22
     EXIT        = 23
@@ -87,6 +87,7 @@ def NTRP_Parse(raw_bytearray=bytearray):
 
     msg.dataID = int(raw_bytearray[5])
     
+    if(msg.header==NTRPHeader_e.MSG.value): datasize = msg.dataID
     for i in range(datasize):
         msg.data.append(raw_bytearray[i+6])
 

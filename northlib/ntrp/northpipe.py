@@ -43,22 +43,19 @@ class NorthPipe():
 
         self.rxbuffer = NTRPBuffer(10)
         self.txpck = ntrp.NTRPPacket()
-        self.newdata = False
-
+    
     def append(self,msg):
         self.rxbuffer.append(msg)
-        self.newdata = True
         
     def waitConnection(self, timeout = 0.5):
         self.transmitMSG("ACK Request")
-        self.newdata = False
-
+    
         timer = 0.0
-        while(self.newdata == False and timer<=timeout):
-            time.sleep(0.01)
-            timer +=   0.01
+        while(not self.rxbuffer.isAvailable() and timer<=timeout):
+            time.sleep(0.001)
+            timer +=   0.001
             
-        if(self.newdata == False): return 0.0
+        if(self.rxbuffer.isAvailable() == False): return 0
         return timer
 
     def txpacket(self, header):
