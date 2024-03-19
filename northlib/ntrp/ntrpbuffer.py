@@ -46,7 +46,7 @@ class NTRPBuffer():
 
         self.mutex = False
             
-    def read(self):
+    def read(self)->ntrp.NTRPMessage:
         if not self.isAvailable(): return None
         self._waitMutex()
         self.mutex = True

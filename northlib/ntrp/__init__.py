@@ -29,26 +29,20 @@ def radioSearch():
     print("RadioManager : COM LIST = ", coms)
 
     for com in coms:
-        ser = serial.Serial(com,NorthRadio.DEFAULT_BAUD,timeout=3)
-        testdata = ""
-        while 1:
-            try:
-                if(ser.in_waiting>6):
-                    testdata = ser.read(6).decode()
-                    break;
-            except UnicodeDecodeError as e:
-                continue
-
-        if ntrp.NTRP_SYNC_DATA in testdata:
-            print('RadioManager found : '+ com)
-            ser.read_all()
-            ser.close()
-            availableRadios.append(NorthRadio(com))
+        nr = NorthRadio(com)
+        if nr.syncRadio(5):
+            print('NTRP Router found : '+ com)
+            availableRadios.append(nr)
+        else: nr.destroy()
 
 def closeAvailableRadios():
     for radio in availableRadios:
         radio.destroy()
     availableRadios.clear()
+
+def getRadio(index=int)->NorthRadio:
+    if index+1<len(availableRadios): return None
+    return availableRadios[index]
 
 def getAvailableRadios():
     return availableRadios

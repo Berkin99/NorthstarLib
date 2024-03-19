@@ -118,11 +118,26 @@ void NTRP_Router::transmitMaster(const NTRP_Message_t* msg){
     if(!_ready)return;
 
     uint8_t* raw_sentence = (uint8_t*)malloc((msg->packetsize+5));
-
     NTRP_Unite(raw_sentence, msg);
     serial_port->write(raw_sentence,msg->packetsize+5);
     free(raw_sentence);
 }
+
+void NTRP_Router::debug(const char* msg){
+    NTRP_Message_t temp;
+    temp.talkerID = NTRP_ROUTER_ID;
+    temp.receiverID = NTRP_MASTER_ID;
+
+    uint8_t i = 0;
+    temp.packet.header = NTRP_MSG;
+    while(i<=(NTRP_MAX_PACKET_SIZE-2) && msg[i]!=0x00){
+        temp.packet.data.bytes[i] = msg[i];    
+    }
+    temp.packet.dataID = i;
+    temp.packetsize = i+2;
+    transmitMaster(&temp);
+}
+
 
 void NTRP_Router::openPipe(NTRP_Pipe_t cmd){    
     if(nrf_pipe_index>=NRF_MAX_PIPE_SIZE) return;

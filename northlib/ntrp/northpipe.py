@@ -100,6 +100,12 @@ class NorthPipe():
 
 class NorthNRF(NorthPipe):
         
+    """
+    NorthNRF Class
+
+    NorthNRF represents RF module on external router. 
+    No use case without router.
+    """
     NRF_250KBPS  = 0
     NRF_1000KBPS = 1
     NRF_2000KBPS = 2
@@ -150,9 +156,9 @@ class NorthNRF(NorthPipe):
         arr.append(self.bandwidth)
         arr.extend(self.address)
         return arr
-    
-    
+        
     def destroy(self):
-        #TODO: Close the port with close port message
+        self.transmitCLOSEPIPE()
+        self.radio.unsubPipe(self.id)
         self.isActive = False
 

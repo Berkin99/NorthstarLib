@@ -11,11 +11,13 @@ NTRP_Message_t ntrp_message;
 void setup() {
   Serial.begin(115200);
   if(!router.sync())  Serial.print("NTRP Router syncronisation error. Error Code : 0x0A");
-  if(!radio.begin()) {Serial.print("NRF Error. Radio module not begin. Error Code : 0x0B"); while(1);}
+  //if(!radio.begin()) {Serial.print("NRF Error. Radio module not begin. Error Code : 0x0B"); while(1);}
 }
 
 void loop() {
+  /* Continously checks serial port for catch a ntrp_message */
   if(router.receiveMaster(&ntrp_message)){
+    /*Route the message to receiver*/
     router.route(&ntrp_message);
   }
 }

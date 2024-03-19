@@ -55,6 +55,8 @@ class NTRP_Router{
     void transmitPipe(uint8_t pipeno, uint8_t* cmd, uint8_t size);
     void transmitMaster(const NTRP_Message_t* msg);
 
+    void debug(const char* msg);
+
     void openPipe(NTRP_Pipe_t cmd);
     void closePipe(char id);
     // void exit(void);

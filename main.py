@@ -2,42 +2,31 @@
 import sys
 import time
 
-import northlib.ntrp as rmg
-from northlib.ntrp.ntrpbuffer import NTRPBuffer
-from northlib.ntrp.northradio import NorthRadio
-from northlib.ntrp.northpipe import NorthPipe
+import northlib.ntrp as radioManager
+from   northlib.ntrp.ntrpbuffer import NTRPBuffer
+from   northlib.ntrp.northradio import NorthRadio
+from   northlib.ntrp.northpipe import NorthPipe
 import northlib.ntrp.ntrp as ntrp
-from northlib.ncmd.controller import Controller
-
 
 TESTMESSAGE = "Computer Message"
 
-def radioRouter():    
-    rmg.radioSearch()
-    
-def radioDirect():    
-    radio = NorthRadio('COM6',9600)
-    rmg.availableRadios.append(radio)
-
 if __name__ == '__main__':
-    radioDirect()
-    if not rmg.availableRadios[0].beginRadio() :  sys.exit()
-
-    time.sleep(2) 
-    mainpipe = NorthPipe(radio=rmg.availableRadios[0])
     
-    #mainpipe.subPipe()
-    # #mainpipe.transmitMSG(TESTMESSAGE)
-    # mainpipe.transmitGET(1)
-    # # while 1:
-    # #     if mainpipe.buffer.isAvailable()>0:
-    # #         ntrp.NTRP_LogMessage(mainpipe.rxbuffer.read())
+    radioManager.radioSearch()
+    if not len(radioManager.availableRadios) > 0: sys.exit()
+    radio = radioManager.getRadio(0)
+    radio.beginRadio()
 
-    ds4 = Controller(mainpipe)
+    msg = ntrp.NTRPMessage()
+    msg.setHeader('MSG')
+    msg.dataID = len(TESTMESSAGE)
+    msg.data = TESTMESSAGE.encode()
 
-    time.sleep(20)
-    
-    ds4.destroy()
-    time.sleep(3)
-    
-    rmg.closeAvailableRadios()
+    timer = 0
+    while timer<20:
+        
+        radio.transmitNTRP(msg)
+        time.sleep(0.001)
+        timer+=0.001
+
+    radioManager.closeAvailableRadios()

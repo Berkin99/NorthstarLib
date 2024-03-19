@@ -88,6 +88,7 @@ class NorthPort(): # NORTH PORT SERIAL COM
             return
         
     def transmit(self,byt):
+        if self.mode == self.NO_CONNECTION: return
         if byt!= None:
             self.port.write(byt)
 
