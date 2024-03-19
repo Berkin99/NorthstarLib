@@ -8,7 +8,7 @@
 #include "ntrp.h"
 #include "RF24.h"
 
-#define SERIAL_DEF          UARTClass //HardwareSerial
+#define SERIAL_DEF          HardwareSerial //UARTClass 
 #define RADIO_DEF           RF24
 
 #define NTRP_DEFAULT_BAUD   115200

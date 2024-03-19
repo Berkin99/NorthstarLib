@@ -4,7 +4,7 @@
 
 #include "ntrp_router.h"
 
-#define UART_TIMEOUT_MS    100
+#define SERIAL_TIMEOUT_MS    100
 
 NTRP_Router::NTRP_Router(SERIAL_DEF* serial_port_x, RADIO_DEF* radio){
     serial_port = serial_port_x;
@@ -49,8 +49,7 @@ switch (msg->receiverID)
             debug("NRF Pipe not found :" + msg->receiverID);
         }
         break;
-    }    
-    
+    }     
 }
 }
 
@@ -61,7 +60,7 @@ void NTRP_Router::routerCOM(NTRP_Packet_t* cmd, uint8_t size){
 switch (header)
 {
     case NTRP_MSG:{
-        debug("Message ACK");
+        debug("Router Message ACK");
         break;
     }
     case R_OPENPIPE:
@@ -98,7 +97,7 @@ uint8_t NTRP_Router::receiveMaster(NTRP_Message_t* msg){
     if(_buffer[0]!=NTRP_STARTBYTE)return 0;
 
     _timer = 0;
-    while((serial_port->available()<3) && (_timer<UART_TIMEOUT_MS)){
+    while((serial_port->available()<3) && (_timer<SERIAL_TIMEOUT_MS)){
         _timeout_tick(1);}
 
     for (uint8_t i = 0; i < 3; i++)
@@ -108,7 +107,7 @@ uint8_t NTRP_Router::receiveMaster(NTRP_Message_t* msg){
     uint8_t packetsize = _buffer[3];
 
     _timer = 0;
-    while((serial_port->available()<packetsize+1) && (_timer<UART_TIMEOUT_MS)){
+    while((serial_port->available()<packetsize+1) && (_timer<SERIAL_TIMEOUT_MS)){
         _timeout_tick(1);}
 
     for (uint8_t i = 0; i < packetsize+1; i++)
@@ -197,7 +196,7 @@ uint8_t NTRP_Router::openPipe(NTRP_Pipe_t cmd){
 }
 
 void NTRP_Router::closePipe(char id){
-    //Not implemented
+    /*Not Implemented*/
 }
 
 void NTRP_Router::_timeout_tick(uint16_t tick){
