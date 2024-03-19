@@ -39,7 +39,7 @@ class NorthPipe():
         # Agent ID identifies the target agent when use UART Lora Module
             
         self.radio = radio            
-        self.radio.subPipe(self)
+        self.radio.subPipe(pipe=self)
 
         self.rxbuffer = NTRPBuffer(10)
         self.txpck = ntrp.NTRPPacket()
@@ -111,8 +111,8 @@ class NorthNRF(NorthPipe):
     NRF_2000KBPS = 2
 
     def __init__(self, radioindex = 0, ch = 0, bandwidth = NRF_1000KBPS, address = "E7E7E7E304"):
-        super().__init__(nt.availableRadios[radioindex])
-        
+        super().__init__(pipe_id='0', radio=nt.getRadio(radioindex))
+    
         self.channel = ch                       #int
         self.bandwidth = bandwidth              #int[0,1,2]
         self.address = bytes.fromhex(address)   #bytearray[5]
@@ -139,7 +139,7 @@ class NorthNRF(NorthPipe):
     def transmitOPENPIPE(self):
         packet = ntrp.NTRPPacket()
         packet.header = ntrp.NTRPHeader_e.OPENPIPE
-        packet.dataID = self.id
+        packet.dataID = ord(self.id)
         packet.data   = self.getNrfData()
 
         self.radio.transmitNTRP(packet,ntrp.NTRP_ROUTER_ID)

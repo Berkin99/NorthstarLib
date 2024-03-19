@@ -48,20 +48,22 @@ class NTRP_Router{
     NTRP_Router(SERIAL_DEF* serial_port_x , RADIO_DEF* radio);
     
     uint8_t sync(uint16_t timeout_ms = 10000);
-    uint8_t receiveMaster(NTRP_Message_t* msg);
 
-    void route(NTRP_Message_t* msg);
-    void routerCOM(NTRP_Packet_t* packet, uint8_t size);
+    void debug(const char* msg);
+    void task(void);
+
+    uint8_t receiveMaster(NTRP_Message_t* msg);
+    void transmitMaster(const NTRP_Message_t* msg);
     
+    uint8_t receivePipe(NTRP_Message_t* msg);
     uint8_t transmitPipe( uint8_t pipeid, const NTRP_Packet_t* packet, uint8_t size);
     void transmitPipeFast( uint8_t pipeid,const uint8_t* raw_sentence, uint8_t size);
 
-    void transmitMaster(const NTRP_Message_t* msg);
-
-    void debug(const char* msg);
-
+    void route(NTRP_Message_t* msg);
+    
+    void    routerCOM(NTRP_Packet_t* packet, uint8_t size);
     uint8_t openPipe(NTRP_Pipe_t cmd);
-    void closePipe(char id);
+    void    closePipe(char id);
     // void exit(void);
 };
 

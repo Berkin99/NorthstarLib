@@ -1,10 +1,17 @@
 #include <stdint.h>
-#include <string.h>
+//#include <string.h>
 #include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+using namespace std;
+
 
 #include "ntrp_router.h"
 
 #define SERIAL_TIMEOUT_MS    100
+
+
+
 
 NTRP_Router::NTRP_Router(SERIAL_DEF* serial_port_x, RADIO_DEF* radio){
     serial_port = serial_port_x;
@@ -34,60 +41,47 @@ uint8_t NTRP_Router::sync(uint16_t timeout_ms){
 
 }
 
-/* Router Handler : Communications Core Function 
-*  Route the NTRP_Message_t to desired address
-*  It is not optimised for router.
-*  USE CASE : General use case and debugging.
-*/
-void NTRP_Router::route(NTRP_Message_t* msg){
-switch (msg->receiverID)
-{
-    case NTRP_MASTER_ID:transmitMaster(msg);break;                      /* ReceiverID Master */
-    case NTRP_ROUTER_ID:routerCOM(&msg->packet,msg->packetsize);break;  /* ReceiverID Router */
-    default:{
-        if(!transmitPipe(msg->receiverID,&msg->packet,msg->packetsize)){ /* Search NRF pipes for Receiver Hit*/
-            debug("NRF Pipe not found :" + msg->receiverID);
-        }
-        break;
-    }     
-}
-}
 
-/* Router Handler : Router Commands */
-void NTRP_Router::routerCOM(NTRP_Packet_t* cmd, uint8_t size){
-    uint8_t header = cmd->header;
-    /*SWITCH TO ROUTER COMMAND*/
-switch (header)
-{
-    case NTRP_MSG:{
-        debug("Router Message ACK");
-        break;
+
+void NTRP_Router::debug(const char* msg){
+    NTRP_Message_t temp;
+    temp.talkerID = NTRP_ROUTER_ID;
+    temp.receiverID = NTRP_MASTER_ID;
+
+    uint8_t i = 0;
+    temp.packet.header = NTRP_MSG;
+    while(i<=(NTRP_MAX_PACKET_SIZE-2) && msg[i]!=0x00){
+        temp.packet.data.bytes[i] = msg[i];
+        i++;    
     }
-    case R_OPENPIPE:
-        if(size<10) return; //Static needed byte length. 
-
-        NTRP_Pipe_t pipe;
-        pipe.id = cmd->dataID;
-        pipe.channel = cmd->data.bytes[0];
-        pipe.speedbyte = cmd->data.bytes[1];
-
-        for(uint8_t i = 0; i<6 ; i++){
-            pipe.address[i] = cmd->data.bytes[i+2];   
-        }
-        if(openPipe(pipe)){debug("NRF Pipe Opened: " + (char)pipe.address);}
-        else{debug("NRF Pipe Error: " + (char)pipe.address);}
-    break;
-    case R_CLOSEPIPE:
-        /*Not Implemented*/
-    break;
-    case R_EXIT:
-        /*Not Implemented*/
-    break;
-    default:
-    break;
-}
+    temp.packet.dataID = i;
+    temp.packetsize = i+2;
+    transmitMaster(&temp);
 }
 
+
+void NTRP_Router::task(void){
+    /* Continously checks serial port for catch a success ntrp_message */
+    static NTRP_Message_t ntrp_message;
+    if(receiveMaster(&ntrp_message)){
+        route(&ntrp_message);
+    }
+
+    /* Continously checks nrf buffer for catch a success ntrp_message */
+    if(receivePipe(&ntrp_message))
+        route(&ntrp_message); 
+    }
+}
+
+
+/* Transmit the NTRP_Message_t to MASTER COMPUTER */
+void NTRP_Router::transmitMaster(const NTRP_Message_t* msg){
+    if(!_ready)return;
+    uint8_t* raw_sentence = (uint8_t*)malloc((msg->packetsize+5));
+    NTRP_Unite(raw_sentence, msg);
+    serial_port->write(raw_sentence,msg->packetsize+5);
+    free(raw_sentence);
+}
 
 /* Receive the NTRP_Message_t from MASTER COMPUTER */
 uint8_t NTRP_Router::receiveMaster(NTRP_Message_t* msg){
@@ -116,15 +110,6 @@ uint8_t NTRP_Router::receiveMaster(NTRP_Message_t* msg){
     }
 
     return NTRP_Parse(msg,_buffer);
-}
-
-/* Transmit the NTRP_Message_t to MASTER COMPUTER */
-void NTRP_Router::transmitMaster(const NTRP_Message_t* msg){
-    if(!_ready)return;
-    uint8_t* raw_sentence = (uint8_t*)malloc((msg->packetsize+5));
-    NTRP_Unite(raw_sentence, msg);
-    serial_port->write(raw_sentence,msg->packetsize+5);
-    free(raw_sentence);
 }
 
 
@@ -159,7 +144,7 @@ void NTRP_Router::transmitPipeFast(uint8_t pipeid,const uint8_t* raw_sentence, u
         nrf->stopListening(); // Set to TX Mode for transaction
 
         if(nrf_last_transmit_index != i){
-            nrf->openWritingPipe(nrf_pipe[i].address);  // Set TX address
+            nrf->openWritingPipe(nrf_pipe[i].address);  // Set Main TX address
             nrf_last_transmit_index = i;
         }
 
@@ -168,20 +153,82 @@ void NTRP_Router::transmitPipeFast(uint8_t pipeid,const uint8_t* raw_sentence, u
     }
 }
 
-void NTRP_Router::debug(const char* msg){
-    NTRP_Message_t temp;
-    temp.talkerID = NTRP_ROUTER_ID;
-    temp.receiverID = NTRP_MASTER_ID;
+uint8_t NTRP_Router::receivePipe(NTRP_Message_t* msg){
+    uint8_t pipe;
+    if(!nrf->available(&pipe))return 0;
+    debug("ReceivedNRF");
+    // nrf->read(_buffer,NTRP_MAX_MSG_SIZE);
+    // NTRP_PackParse(&msg->packet,_buffer);
 
-    uint8_t i = 0;
-    temp.packet.header = NTRP_MSG;
-    while(i<=(NTRP_MAX_PACKET_SIZE-2) && msg[i]!=0x00){
-        temp.packet.data.bytes[i] = msg[i];    
-    }
-    temp.packet.dataID = i;
-    temp.packetsize = i+2;
-    transmitMaster(&temp);
+    // msg->receiverID = NTRP_MASTER_ID;
+    // msg->talkerID = nrf_pipe[pipe].id;
+    // msg->packetsize = NTRP_MAX_PACKET_SIZE;
+    return 1;
 }
+    
+
+
+
+/* Router Handler : Communications Core Function 
+*  Route the NTRP_Message_t to desired address
+*  It is not optimised for router.
+*  USE CASE : General use case and debugging.
+*/
+void NTRP_Router::route(NTRP_Message_t* msg){
+    
+switch (msg->receiverID)
+{
+    case NTRP_MASTER_ID:transmitMaster(msg);break;                      /* ReceiverID Master */
+    case NTRP_ROUTER_ID:routerCOM(&msg->packet,msg->packetsize);break;  /* ReceiverID Router */
+    default:{
+        if(!transmitPipe(msg->receiverID,&msg->packet,msg->packetsize)){ /* Search NRF pipes for Receiver Hit*/
+            debug("NRF Pipe not found :" + msg->receiverID);
+        }
+        break;
+    }     
+}
+}
+
+/* Router Handler : Router Commands */
+void NTRP_Router::routerCOM(NTRP_Packet_t* cmd, uint8_t size){
+
+    // char head[] = "Header =     ";
+    // sprintf(&head[9],"%d",(int)cmd->header);
+    // debug(head);
+
+    /*SWITCH TO ROUTER COMMAND*/
+switch (cmd->header)
+{
+    case NTRP_MSG:{
+        debug("Router Message ACK");
+        break;
+    }
+    case R_OPENPIPE:
+        if(size<8) return; /* Required byte length */ 
+
+        NTRP_Pipe_t pipe;
+        pipe.id = cmd->dataID; /* Reference PIPE id : '1','2'... */
+        pipe.channel = cmd->data.bytes[0];
+        pipe.speedbyte = cmd->data.bytes[1];
+
+        for(uint8_t i = 0; i<5 ; i++){
+            pipe.address[i] = cmd->data.bytes[i+2];   
+        }
+
+        if(openPipe(pipe)){debug("NRF Pipe Opened");}
+        else{debug("NRF Pipe Error");}
+    break;
+    case R_CLOSEPIPE:
+        /*Not Implemented*/
+    break;
+    case R_EXIT:
+        /*Not Implemented*/
+    break;
+    default:
+    break;
+}
+}
+
 
 
 uint8_t NTRP_Router::openPipe(NTRP_Pipe_t cmd){    
@@ -190,6 +237,7 @@ uint8_t NTRP_Router::openPipe(NTRP_Pipe_t cmd){
     //TODO: nrf->setSpeed(speeds[cmd.speedbyte])
     nrf->openReadingPipe(nrf_pipe_index, cmd.address); 
     nrf->startListening();
+
     nrf_pipe[nrf_pipe_index] = cmd;
     nrf_pipe_index++; 
     return 1;
@@ -198,6 +246,20 @@ uint8_t NTRP_Router::openPipe(NTRP_Pipe_t cmd){
 void NTRP_Router::closePipe(char id){
     /*Not Implemented*/
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 void NTRP_Router::_timeout_tick(uint16_t tick){
     _timer+=tick;

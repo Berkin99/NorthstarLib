@@ -5,27 +5,27 @@ import time
 import northlib.ntrp as radioManager
 from   northlib.ntrp.ntrpbuffer import NTRPBuffer
 from   northlib.ntrp.northradio import NorthRadio
-from   northlib.ntrp.northpipe import NorthPipe
+from   northlib.ntrp.northpipe import NorthPipe,NorthNRF
 import northlib.ntrp.ntrp as ntrp
 
 TESTMESSAGE = "Master Test Message"
 
 if __name__ == '__main__':
-    
+
+    #print(ntrp.NTRPHeader_e.OPENPIPE.value)
+    #sys.exit()
+
     radioManager.radioSearch()
     if not len(radioManager.availableRadios) > 0: sys.exit()
     radio = radioManager.getRadio(0)
     radio.beginRadio()
 
-    msg = ntrp.NTRPMessage()
-    msg.setHeader('MSG')
-    msg.dataID = len(TESTMESSAGE)
-    msg.data = TESTMESSAGE.encode()
-
-    timer = 0
-
+    time.sleep(1)
+    rfRadio = NorthNRF(0,0,address="3030303031") 
+    print("RF Radio ID = " + rfRadio.id)
+    
+    timer = 0.0
     while timer<20:
-        radio.transmitNTRP(msg)
         time.sleep(0.001)
         timer+=0.001
 

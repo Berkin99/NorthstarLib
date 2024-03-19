@@ -1,23 +1,24 @@
 
+#include <SPI.h>
 #include "RF24.h"
+
 #include "ntrp.h"
 #include "ntrp_router.h"
 
-RF24 radio(8,9);
-
-NTRP_Router router(&Serial,&radio);
-NTRP_Message_t ntrp_message;
+RF24 rfmodule(8,9);
+NTRP_Router router(&Serial,&rfmodule);
 
 void setup() {
   Serial.begin(115200);
-  if(!router.sync())  Serial.print("NTRP Router syncronisation error. Error Code : 0x0A");
-  //if(!radio.begin()) {Serial.print("NRF Error. Radio module not begin. Error Code : 0x0B"); while(1);}
+  
+  if(!rfmodule.begin())while(1);
+  if(!router.sync()) while(1);
+
+  delay(100);
+  router.debug("NTRP Router Start v.5");
+  
 }
 
 void loop() {
-  /* Continously checks serial port for catch a success ntrp_message */
-  if(router.receiveMaster(&ntrp_message)){
-    /*Route the message to receiver*/
-    router.route(&ntrp_message);
-  }
+  router.task();
 }

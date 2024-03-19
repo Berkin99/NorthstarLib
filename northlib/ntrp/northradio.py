@@ -39,7 +39,6 @@ class NorthRadio(NorthPort):
 
     def __init__(self, com=None , baud=DEFAULT_BAUD):
         super().__init__(com, baud)
-        self.logbuffer = NTRPBuffer(20)
         self.isSync = False
         self.pipes = []
         self.radioid = ntrp.NTRP_MASTER_ID
@@ -78,14 +77,17 @@ class NorthRadio(NorthPort):
         msg = ntrp.NTRPMessage()
         msg.talker = self.radioid
         msg.receiver = receiverid
-        msg.packetsize = len(pck.data)+3
+        msg.packetsize = len(pck.data)+2
 
         msg.header = pck.header
         msg.dataID = pck.dataID
         msg.data   = pck.data
-        #ntrp.NTRP_LogMessage(msg)
         arr = ntrp.NTRP_Unite(msg)
-        #print(ntrp.NTRP_bytes(arr))
+
+        """            DEBUG MODE
+        ntrp.NTRP_LogMessage(msg)
+        print(ntrp.NTRP_bytes(arr))
+        """
         self.transmit(arr)
 
     def subPipe(self,pipe):
@@ -100,18 +102,17 @@ class NorthRadio(NorthPort):
         for i in range(len(self.pipes)):
             test_id_value = ord(self.pipes[i].id)
             if  test_id_value > max_id_value : max_id_value = test_id_value 
-        return chr(max_id_value+1)
+        return chr(max_id_value)
 
     def rxHandler(self,msg=ntrp.NTRPMessage):
         for pipe in self.pipes:
             if pipe.id == msg.talker:
                 pipe.append(msg)
                 return
-            
-        self.logbuffer.append(msg)
-        if(msg.header == ntrp.NTRPHeader_e.MSG):
-            print(msg.talker + " : " + msg.data.decode())
 
+        if(msg.header == ntrp.NTRPHeader_e.MSG):
+            print(self.com + ":/"+msg.talker+"> " + msg.data.decode())
+    
     def rxProcess(self):        
         while self.isActive and (self.mode != self.NO_CONNECTION):
             time.sleep(self.WAIT_TICK)
@@ -138,7 +139,7 @@ class NorthRadio(NorthPort):
 
             #Print received ntrp message
             if msg == None: 
-                print("NAK: " + ntrp.NTRP_bytes(arr))   
+                print(self.com + ":/rxProcess> NAK: " + ntrp.NTRP_bytes(arr))   
             else:
                 self.rxHandler(msg) 
 
