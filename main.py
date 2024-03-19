@@ -8,7 +8,7 @@ from   northlib.ntrp.northradio import NorthRadio
 from   northlib.ntrp.northpipe import NorthPipe
 import northlib.ntrp.ntrp as ntrp
 
-TESTMESSAGE = "Computer Message"
+TESTMESSAGE = "Master Test Message"
 
 if __name__ == '__main__':
     
@@ -23,8 +23,8 @@ if __name__ == '__main__':
     msg.data = TESTMESSAGE.encode()
 
     timer = 0
+
     while timer<20:
-        
         radio.transmitNTRP(msg)
         time.sleep(0.001)
         timer+=0.001

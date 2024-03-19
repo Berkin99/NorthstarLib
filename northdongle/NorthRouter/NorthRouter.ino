@@ -15,7 +15,7 @@ void setup() {
 }
 
 void loop() {
-  /* Continously checks serial port for catch a ntrp_message */
+  /* Continously checks serial port for catch a success ntrp_message */
   if(router.receiveMaster(&ntrp_message)){
     /*Route the message to receiver*/
     router.route(&ntrp_message);

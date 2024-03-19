@@ -107,10 +107,10 @@ class NorthRadio(NorthPort):
             if pipe.id == msg.talker:
                 pipe.append(msg)
                 return
-        
+            
         self.logbuffer.append(msg)
-        if(msg.header == ntrp.NTRPHeader_e.MSG): print(msg.data.decode())
-        #ntrp.NTRP_LogMessage(msg)
+        if(msg.header == ntrp.NTRPHeader_e.MSG):
+            print(msg.talker + " : " + msg.data.decode())
 
     def rxProcess(self):        
         while self.isActive and (self.mode != self.NO_CONNECTION):
