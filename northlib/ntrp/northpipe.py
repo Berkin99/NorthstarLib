@@ -105,37 +105,38 @@ class NorthNRF(NorthPipe):
 
     NorthNRF represents RF module on external router. 
     No use case without router.
+    >OPENPIPE in the router. The PIPE ID need to be same
+    with NorthPipe Object. NorthNRF requests new unique ID
+    from NorthRadio for PIPE ID. 
     """
     NRF_250KBPS  = 0
     NRF_1000KBPS = 1
     NRF_2000KBPS = 2
 
-    def __init__(self, radioindex = 0, ch = 0, bandwidth = NRF_1000KBPS, address = "E7E7E7E304"):
+    def __init__(self, radioindex = 0, ch = 0, bandwidth = NRF_1000KBPS, address = "E7E7E7E900"):
         super().__init__(pipe_id='0', radio=nt.getRadio(radioindex))
     
         self.channel = ch                       #int
         self.bandwidth = bandwidth              #int[0,1,2]
-        self.address = bytes.fromhex(address)   #bytearray[5]
-        if(len(self.address) != 5): raise ValueError()
-        
+        self.setAddress(address)
+
         self.isActive = True
 
         #If Use NRF Router module, Agents has nrf address instead of ID
         #ID needs to be defined to identify the pipe, so get new tag from radio
-        self.id = self.radio.newPipeID() 
+        self.id = self.radio.newPipeID() #Unique ID Request
         self.txOPENPIPE()
     
-    def setChannel(self,ch):
+    def setChannel(self,ch=0):
         self.channel = ch
-        return True
 
-    def setBandwidth(self,bw):
-        self.bandwidth = bw
-        return True
+    def setBandwidth(self,bandwidth=NRF_1000KBPS):
+        self.bandwidth = bandwidth
     
-    def setAddress(self, address):
+    def setAddress(self, address="E7E7E7E900"):
         self.address = bytes.fromhex(address)
-
+        if(len(self.address) != 5): raise ValueError() #NRF Address is 5 bytes
+    
     def txOPENPIPE(self):
         packet = ntrp.NTRPPacket()
         packet.header = ntrp.NTRPHeader_e.OPENPIPE
@@ -149,12 +150,13 @@ class NorthNRF(NorthPipe):
         packet.dataID = self.id
         self.radio.transmitNTRP(packet,ntrp.NTRP_ROUTER_ID)
 
+    #NRTP_Pipe_t in the router
     def getNrfData(self):
         arr = bytearray()
-        arr.append(self.channel)
-        arr.append(self.bandwidth)
-        arr.extend(self.address)
-        return arr
+        arr.append(self.channel)    #Channelbyte
+        arr.append(self.bandwidth)  #Bandwidthbyte 
+        arr.extend(self.address)    #5 byte address
+        return arr #[CH,BANDWIDTH,[0,0,0,0,1]]
         
     def destroy(self):
         self.txCLOSEPIPE()

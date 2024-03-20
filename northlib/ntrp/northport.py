@@ -36,8 +36,6 @@ class NorthPort(): # NORTH PORT SERIAL COM
         self.setSerial(com,baudrate)
 
     def setSerial(self,com=None,baudrate=AUTOBAUDRATE):
-        #Control Com and Baudrate (isAvailable)
-        if not(baudrate_e.__contains__(baudrate) and (com in NorthPort.getAvailablePorts())): return
         
         if self.port != None:
             self.mode = self.NO_CONNECTION #No Connection info for Rx Thread

@@ -11,8 +11,14 @@ import northlib.ntrp.ntrp as ntrp
 TESTMESSAGE = "Master Test Message"
 
 """
-TOC
-["name.x"]
+Test messages
+MSG -> return ACK : OK
+SET -> set the target data id [NEEDED TOC]
+GET -> get the target data id : OK
+CMD -> OK
+
+Speed test
+DS4 Controller test 
 """
 
 if __name__ == '__main__':
@@ -31,7 +37,9 @@ if __name__ == '__main__':
     
     timer = 0.0
     while timer<20:
-        rf_pipe.txMSG("Hello")
+        #rf_pipe.txMSG("Test Message")
+        #rf_pipe.txCMD(bytearray([31,62,93,0]))
+        
         if(rf_pipe.rxbuffer.isAvailable()):
             ntrp.NTRP_LogMessage(rf_pipe.rxbuffer.read())
         time.sleep(1)

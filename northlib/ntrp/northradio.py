@@ -59,8 +59,8 @@ class NorthRadio(NorthPort):
             if ntrp.NTRP_SYNC_DATA in msg:
                 self.isSync = True
                 self.transmit(ntrp.NTRP_PAIR_DATA.encode())
-                time.sleep(0.1)      #Wait remaining data
-                self.port.read_all() #Clear the buffer
+                time.sleep(0.01)      #Wait remaining data
+                self.port.read_all()  #Clear the buffer
                 return True
 
         return False
@@ -74,6 +74,7 @@ class NorthRadio(NorthPort):
         return False 
 
     def transmitNTRP(self,pck=ntrp.NTRPPacket, receiverid='0'):
+        if(self.mode == self.NO_CONNECTION): return
         msg = ntrp.NTRPMessage()
         msg.talker = self.radioid
         msg.receiver = receiverid
@@ -84,7 +85,7 @@ class NorthRadio(NorthPort):
         msg.data   = pck.data
         arr = ntrp.NTRP_Unite(msg)
 
-        """            DEBUG MODE
+        """ <DEBUG TRANSMIT MSG> 
         ntrp.NTRP_LogMessage(msg)
         print(ntrp.NTRP_bytes(arr))
         """
@@ -98,6 +99,9 @@ class NorthRadio(NorthPort):
             if self.pipes[i].id == pipe_id: self.pipes.pop(i)
     
     def newPipeID(self):
+        #New Unique Pipe ID (char) Request
+        #Only important thing is, pipe id need to be a char and unique
+
         max_id_value = ord('1')
         for i in range(len(self.pipes)):
             test_id_value = ord(self.pipes[i].id)
@@ -105,9 +109,12 @@ class NorthRadio(NorthPort):
         return chr(max_id_value)
 
     def rxHandler(self,msg=ntrp.NTRPMessage):
-        
+
+        """ <DEBUG INCOMING MSG>
+        ntrp.NTRP_LogMessage(msg)
+        """        
+       
         if(msg.header == ntrp.NTRPHeader_e.MSG):
-            #ntrp.NTRP_LogMessage(msg)
             print(self.com + ":/"+msg.talker+"> " + msg.data.decode('ascii',errors='ignore'))
 
         for pipe in self.pipes:
@@ -116,7 +123,9 @@ class NorthRadio(NorthPort):
                 return
 
     
-    def rxProcess(self):        
+    def rxProcess(self):
+        #If connection lost, Rx process ends.
+        #Wait tick value is not necessary but slowing things is usually good
         while self.isActive and (self.mode != self.NO_CONNECTION):
             time.sleep(self.WAIT_TICK)
             byt = None
@@ -140,11 +149,11 @@ class NorthRadio(NorthPort):
             arr.extend(arex)
 
             msg = ntrp.NTRP_Parse(arr)
-
-            #Print received ntrp message
             if msg == None: 
+                #If Parsing error msg == None: Debug NAK bytes
                 print(self.com + ":/rxProcess> NAK: " + ntrp.NTRP_bytes(arr))   
             else:
+                #Parse Success, handle the NTRPMessage
                 self.rxHandler(msg) 
 
 

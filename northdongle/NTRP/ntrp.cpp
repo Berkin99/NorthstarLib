@@ -27,7 +27,7 @@ uint8_t NTRP_Parse(NTRP_Message_t* ref, const uint8_t* raw_sentence){
 	ref->receiverID  = raw_sentence[2];
 	ref->packetsize  = raw_sentence[3];
 
-	if(!(ref->packetsize>2))return 0;
+	if(ref->packetsize<2)return 0;
 
 	ref->packet.header = raw_sentence[4];
 	ref->packet.dataID = raw_sentence[5];
