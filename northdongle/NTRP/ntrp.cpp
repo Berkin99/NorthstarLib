@@ -64,6 +64,7 @@ uint8_t NTRP_PackUnite(uint8_t* ref, uint8_t size, const NTRP_Packet_t* packet){
 	ref[1] = packet->dataID;
 	for(uint8_t i = 0; i<(size-2) ;i++){
 		ref[i+2] = packet->data.bytes[i];
+		if(i+2>NTRP_MAX_PACKET_SIZE) break;
 	}
 	return 1;
 }

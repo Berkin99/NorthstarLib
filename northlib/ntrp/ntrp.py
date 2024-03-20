@@ -42,11 +42,12 @@ class NTRPPacket():
     MAX_PACKET_SIZE = 28
     MAX_DATA_SIZE = 26
 
-    def __init__(self):
+    def __init__(self,header='ACK', dataID=0):
         #NTRP_Packet_t
-        self.header  = NTRPHeader_e.ACK     #cmd or routercmd
-        self.dataID  = 0                    #data id or pipeno
-        self.data    = bytearray()          #payload
+        self.header  = NTRPHeader_e.ACK
+        self.setHeader(headername=header)
+        self.dataID  = dataID       #data id or pipeno
+        self.data    = bytearray()         #payload
 
     #Set Header With Name
     def setHeader(self,headername):
@@ -61,11 +62,11 @@ class NTRPPacket():
 class NTRPMessage(NTRPPacket):
     MAX_MESSAGE_SIZE = 32
 
-    def __init__(self):
+    def __init__(self,talker='0',receiver='0'):
         super().__init__()
-        self.talker      = '0'          #char
-        self.receiver    = '0'          #char
-        self.packetsize  =  3           #int
+        self.talker      = talker           #char
+        self.receiver    = receiver         #char
+        self.packetsize  = 3                #int
         
 # @param raw_bytearray = bytearray
 # if error : returns None 
@@ -76,6 +77,8 @@ def NTRP_Parse(raw_bytearray=bytearray):
     msg.talker   = chr(raw_bytearray[1])
     msg.receiver = chr(raw_bytearray[2])
     msg.packetsize = int(raw_bytearray[3])
+
+    msg.data = bytearray()
 
     if(msg.packetsize<2 or msg.packetsize>NTRP_MAX_PACKET_SIZE) : return None 
     datasize = msg.packetsize-2
@@ -121,6 +124,7 @@ def NTRP_LogMessage(message=NTRPMessage):
     print("HEADER: ", message.header.name)
     print("DATID: ", message.dataID)
     print("DATA: ", NTRP_bytes(message.data))
+
 
 def NTRP_bytes(byt):
     msg = binascii.hexlify(byt)

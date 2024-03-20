@@ -9,6 +9,7 @@ from   northlib.ntrp.northpipe import NorthPipe,NorthNRF
 import northlib.ntrp.ntrp as ntrp
 
 TESTMESSAGE = "Master Test Message"
+
 """
 TOC
 ["name.x"]
@@ -25,14 +26,15 @@ if __name__ == '__main__':
     radio.beginRadio()
 
     time.sleep(1)
-    rfRadio = NorthNRF(0,0,address="3030303031") 
-    print("RF Radio ID = " + rfRadio.id)
+    rf_pipe = NorthNRF(0,0,address="3030303031") 
+    print("RF Radio ID = " + str(ord(rf_pipe.id)))
     
     timer = 0.0
     while timer<20:
-        if(rfRadio.rxbuffer.isAvailable()):
-            ntrp.NTRP_LogMessage(rfRadio.rxbuffer.read())
-        time.sleep(0.001)
-        timer+=0.001
+        rf_pipe.txMSG("Hello")
+        if(rf_pipe.rxbuffer.isAvailable()):
+            ntrp.NTRP_LogMessage(rf_pipe.rxbuffer.read())
+        time.sleep(1)
+        timer+=1
 
     radioManager.closeAvailableRadios()

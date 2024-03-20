@@ -41,14 +41,13 @@ uint8_t NTRP_Router::sync(uint16_t timeout_ms){
 
 }
 
-
-
 void NTRP_Router::debug(const char* msg){
     NTRP_Message_t temp;
     temp.talkerID = NTRP_ROUTER_ID;
     temp.receiverID = NTRP_MASTER_ID;
 
     uint8_t i = 0;
+    i=0;
     temp.packet.header = NTRP_MSG;
     while(i<=(NTRP_MAX_PACKET_SIZE-2) && msg[i]!=0x00){
         temp.packet.data.bytes[i] = msg[i];
@@ -114,7 +113,6 @@ uint8_t NTRP_Router::receiveMaster(NTRP_Message_t* msg){
 
 /* Transmit the NTRP_Message_t to TARGET NRF PIPE */
 uint8_t NTRP_Router::transmitPipe( uint8_t pipeid, const NTRP_Packet_t* packet,uint8_t size){
-
     uint8_t isFound = 0;
     for (uint8_t i = 0; i < nrf_pipe_index; i++)
     {
@@ -122,6 +120,7 @@ uint8_t NTRP_Router::transmitPipe( uint8_t pipeid, const NTRP_Packet_t* packet,u
 
         isFound = 1;    
         nrf->stopListening(); // Set to TX Mode for transaction
+        
         if(nrf_last_transmit_index != i){
             nrf->openWritingPipe(nrf_pipe[i].address);
             nrf_last_transmit_index = i;
@@ -192,24 +191,24 @@ switch (msg->receiverID)
 /* Router Handler : Router Commands */
 void NTRP_Router::routerCOM(NTRP_Packet_t* cmd, uint8_t size){
 
-    // char head[] = "Header =     ";
-    // sprintf(&head[9],"%d",(int)cmd->header);
-    // debug(head);
+    char head[] = "Header =     ";
+    sprintf(&head[9],"%d",(int)cmd->header);
+    debug(head);
 
     /*SWITCH TO ROUTER COMMAND*/
 switch (cmd->header)
 {
     case NTRP_MSG:{
-        debug("Router Message ACK");
+        debug("Router Message ACK\n");
         break;
     }
     case R_OPENPIPE:
-        if(size<8) return; /* Required byte length */ 
+        if(size<7) return; /* Required byte length */ 
 
         NTRP_Pipe_t pipe;
-        pipe.id = cmd->dataID; /* Reference PIPE id : '1','2'... */
-        pipe.channel = cmd->data.bytes[0];
-        pipe.speedbyte = cmd->data.bytes[1];
+        pipe.id =           cmd->dataID; /* Reference PIPE id char : '1','2'... */
+        pipe.channel =      cmd->data.bytes[0];
+        pipe.bandwidth =    cmd->data.bytes[1];
 
         for(uint8_t i = 0; i<5 ; i++){
             pipe.address[i] = cmd->data.bytes[i+2];   
@@ -229,8 +228,6 @@ switch (cmd->header)
 }
 }
 
-
-
 uint8_t NTRP_Router::openPipe(NTRP_Pipe_t cmd){    
     if(nrf_pipe_index>=NRF_MAX_PIPE_SIZE) return 0;
     //TODO: nrf->setChannel(cmd.channel);
@@ -239,26 +236,13 @@ uint8_t NTRP_Router::openPipe(NTRP_Pipe_t cmd){
     nrf->startListening();
 
     nrf_pipe[nrf_pipe_index] = cmd;
-    nrf_pipe_index++; 
+    nrf_pipe_index++;     
     return 1;
 }
 
 void NTRP_Router::closePipe(char id){
     /*Not Implemented*/
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 void NTRP_Router::_timeout_tick(uint16_t tick){

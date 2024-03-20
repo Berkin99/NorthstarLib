@@ -107,6 +107,7 @@ class NorthRadio(NorthPort):
     def rxHandler(self,msg=ntrp.NTRPMessage):
         
         if(msg.header == ntrp.NTRPHeader_e.MSG):
+            #ntrp.NTRP_LogMessage(msg)
             print(self.com + ":/"+msg.talker+"> " + msg.data.decode('ascii',errors='ignore'))
 
         for pipe in self.pipes:
@@ -118,6 +119,7 @@ class NorthRadio(NorthPort):
     def rxProcess(self):        
         while self.isActive and (self.mode != self.NO_CONNECTION):
             time.sleep(self.WAIT_TICK)
+            byt = None
             byt = self.receive()
             if byt == None: continue
             if byt != ntrp.NTRP_STARTBYTE.encode(): continue

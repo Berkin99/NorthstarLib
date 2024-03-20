@@ -37,18 +37,23 @@ class NorthPipe():
         # The Pipe ID is should be same with target agent ID
         # Agent ID is represents the rf adress when use NTRP_Router Dongle
         # Agent ID identifies the target agent when use UART Lora Module
-            
         self.radio = radio            
         self.radio.subPipe(pipe=self)
 
         self.rxbuffer = NTRPBuffer(10)
         self.txpck = ntrp.NTRPPacket()
-    
+        self.newPacketCallBack = None
+        
     def append(self,msg):
         self.rxbuffer.append(msg)
-        
+        if self.newPacketCallBack != None:
+            self.newPacketCallBack()
+
+    def setCallBack(self, func):
+        self.newPacketCallBack = func
+
     def waitConnection(self, timeout = 0.5):
-        self.transmitMSG("ACK Request")
+        self.txMSG("ACK Request")
     
         timer = 0.0
         while(not self.rxbuffer.isAvailable() and timer<=timeout):
@@ -58,41 +63,39 @@ class NorthPipe():
         if(self.rxbuffer.isAvailable() == False): return 0
         return timer
 
-    def txpacket(self, header):
-        txpk = ntrp.NTRPPacket()
-        txpk.setHeader(header)
-        return txpk
+    def transmitPacket(self,txPacket = ntrp.NTRPPacket):
+        self.radio.transmitNTRP(txPacket,self.id)     
 
-    def transmitNAK(self):               
-        self.txpck = self.txpacket('NAK')
-        self.radio.transmitNTRP(self.txpck,self.id)     
+    def txNAK(self):               
+        self.txpck = ntrp.NTRPPacket('NAK')
+        self.transmitPacket(self.txpck)     
 
-    def transmitACK(self):
-        self.txpck = self.txpacket('ACK')
-        self.radio.transmitNTRP(self.txpck,self.id)     
+    def txACK(self):
+        self.txpck = ntrp.NTRPPacket('ACK')
+        self.transmitPacket(self.txpck)     
 
-    def transmitMSG(self,msg=str):        
-        self.txpck = self.txpacket('MSG')
+    def txMSG(self,msg=str):        
+        self.txpck = ntrp.NTRPPacket('MSG')
         self.txpck.data = msg.encode()
         self.txpck.dataID = len(self.txpck.data)        
-        self.radio.transmitNTRP(self.txpck,self.id)     
+        self.transmitPacket(self.txpck)     
 
-    def transmitGET(self,dataid=int):
-        self.txpck = self.txpacket('GET')
+    def txGET(self,dataid=int):
+        self.txpck = ntrp.NTRPPacket('GET')
         self.txpck.dataID = dataid
-        self.radio.transmitNTRP(self.txpck,self.id)
+        self.transmitPacket(self.txpck)
 
-    def transmitSET(self,dataid=int,databytes=bytearray):
-        self.txpck = self.txpacket('SET')
+    def txSET(self,dataid=int,databytes=bytearray):
+        self.txpck = ntrp.NTRPPacket('SET')
         self.txpck.dataID = dataid
         self.txpck.data = databytes   
-        self.radio.transmitNTRP(self.txpck,self.id)
+        self.transmitPacket(self.txpck)
         
-    def transmitCMD(self,channels=bytearray):
-        self.txpck = self.txpacket('CMD')
+    def txCMD(self,channels=bytearray):
+        self.txpck = ntrp.NTRPPacket('CMD')
         self.txpck.dataID = 0
         self.txpck.data = channels   
-        self.radio.transmitNTRP(self.txpck,self.id)
+        self.transmitPacket(self.txpck)
         
 
 class NorthNRF(NorthPipe):
@@ -120,7 +123,7 @@ class NorthNRF(NorthPipe):
         #If Use NRF Router module, Agents has nrf address instead of ID
         #ID needs to be defined to identify the pipe, so get new tag from radio
         self.id = self.radio.newPipeID() 
-        self.transmitOPENPIPE()
+        self.txOPENPIPE()
     
     def setChannel(self,ch):
         self.channel = ch
@@ -133,15 +136,14 @@ class NorthNRF(NorthPipe):
     def setAddress(self, address):
         self.address = bytes.fromhex(address)
 
-    def transmitOPENPIPE(self):
+    def txOPENPIPE(self):
         packet = ntrp.NTRPPacket()
         packet.header = ntrp.NTRPHeader_e.OPENPIPE
         packet.dataID = ord(self.id)
         packet.data   = self.getNrfData()
-
         self.radio.transmitNTRP(packet,ntrp.NTRP_ROUTER_ID)
     
-    def transmitCLOSEPIPE(self):
+    def txCLOSEPIPE(self):
         packet = ntrp.NTRPPacket()
         packet.header = ntrp.NTRPHeader_e.CLOSEPIPE
         packet.dataID = self.id
@@ -155,7 +157,7 @@ class NorthNRF(NorthPipe):
         return arr
         
     def destroy(self):
-        self.transmitCLOSEPIPE()
+        self.txCLOSEPIPE()
         self.radio.unsubPipe(self.id)
         self.isActive = False
 

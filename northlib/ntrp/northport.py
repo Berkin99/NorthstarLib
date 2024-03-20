@@ -54,7 +54,7 @@ class NorthPort(): # NORTH PORT SERIAL COM
     def errorSerial(self):
             self.mode = self.NO_CONNECTION
             self.port = None 
-            print("Serial Exception")
+            print(self.com + ": No Connection")
 
     def getAvailablePorts():
         return [port.device for port in serial.tools.list_ports.comports()]
@@ -83,15 +83,18 @@ class NorthPort(): # NORTH PORT SERIAL COM
             msg = self.port.readline()                    
             self.mode = self.READY
             return msg
-        except serial.SerialException as error:
+        except serial.SerialException:
             self.errorSerial()
             return
         
     def transmit(self,byt):
         if self.mode == self.NO_CONNECTION: return
         if byt!= None:
-            self.port.write(byt)
-
+            try:
+                self.port.write(byt)
+            except serial.SerialException:
+                self.errorSerial()
+            
     def destroy(self):
         self.mode = self.NO_CONNECTION
         if self.port != None:

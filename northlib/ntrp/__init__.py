@@ -29,8 +29,12 @@ def radioSearch():
     print("RadioManager : COM LIST = ", coms)
 
     for com in coms:
-        nr = NorthRadio(com)
-        if nr.syncRadio(5):
+        nr = None
+        try:
+            nr = NorthRadio(com)
+        except: serial.SerialException
+
+        if nr.syncRadio(2):
             print('NTRP Router found : '+ com)
             availableRadios.append(nr)
         else: nr.destroy()

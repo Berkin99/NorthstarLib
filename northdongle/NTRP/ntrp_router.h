@@ -24,7 +24,6 @@ typedef enum{
 typedef struct{
   uint8_t id;
   uint8_t channel;
-  uint8_t speedbyte;
   uint8_t bandwidth;
   uint8_t address[5];
 }NTRP_Pipe_t;
