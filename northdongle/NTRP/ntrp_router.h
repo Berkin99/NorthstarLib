@@ -40,8 +40,17 @@
 typedef enum{
   R_OPENPIPE    = 21,
   R_CLOSEPIPE   = 22,
-  R_EXIT        = 23,
+  R_TRX         = 23,  
+  R_FULLRX      = 24,
+  R_FULLTX      = 25,
+  R_EXIT        = 26,
 }NTRP_RouterHeader_e;
+
+typedef enum{
+  R_MODE_TRX      = 0,
+  R_MODE_FULLRX   = 1,
+  R_MODE_FULLTX   = 2,
+}NTRP_RouterMode;
 
 typedef struct{
   uint8_t id;         /*Pipe ID (Unique) : Represents the 5 byte address*/
@@ -53,14 +62,15 @@ typedef struct{
 class NTRP_Router{
     
     private:
+    
     bool _ready; /* Syncronisation ? OK : ERROR */       
     SERIAL_DEF* serial_port;
     RADIO_DEF* nrf;
 
-    NTRP_Pipe_t nrf_pipe[NRF_MAX_PIPE_SIZE];  /* 6 PIPE */
+    NTRP_Pipe_t nrf_pipe[NRF_MAX_PIPE_SIZE];  /* 6 PIPE !!!! Do not use pipe 0 for multiceiver applications !!!! */
     uint8_t nrf_pipe_index;                   /* Current PIPE Index */
-    int8_t nrf_last_transmit_index;           /* Last Transmit Channel Index */
-
+    int8_t  nrf_last_transmit_index;          /* Last Transmit Channel Index */
+    
     uint32_t _timer;
     void _timeout_tick(uint16_t tick = 1);
     
@@ -69,6 +79,7 @@ class NTRP_Router{
 
     public:
     NTRP_Router(SERIAL_DEF* serial_port_x , RADIO_DEF* radio);
+    NTRP_RouterMode mode;
 
     uint8_t sync(uint16_t timeout_ms = 10000);
     void task(void);

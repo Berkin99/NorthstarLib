@@ -25,10 +25,11 @@ if __name__ == '__main__':
     if not len(radioManager.availableRadios) > 0: sys.exit()
     radio = radioManager.getRadio(0)
     radio.beginRadio()
-
     time.sleep(1)
     rf_pipe = NorthNRF(0,0,address="E7E7E7E300") 
     print("RF Radio ID = " + str(ord(rf_pipe.id)))
+    
+    rf_pipe.txFULLTX(); #ONLY TRANSMIT MODE
     ctrl = ncmd.Controller(rf_pipe)
 
     while 1:

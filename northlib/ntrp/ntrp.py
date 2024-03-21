@@ -36,7 +36,10 @@ class NTRPHeader_e(Enum):
 
     OPENPIPE    = 21 #PipeID + (channel,speedid,address[5])    
     CLOSEPIPE   = 22
-    EXIT        = 23
+    TRX         = 23 #Router Transceiver MODE
+    FULLRX      = 24 #Router FULL RX 
+    FULLTX      = 25 #Router FULL TX
+    EXIT        = 26
 
 class NTRPPacket():
     MAX_PACKET_SIZE = 28

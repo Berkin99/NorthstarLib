@@ -141,16 +141,20 @@ class NorthNRF(NorthPipe):
         if(len(self.address) != 5): raise ValueError() #NRF Address is 5 bytes
     
     def txOPENPIPE(self):
-        packet = ntrp.NTRPPacket()
-        packet.header = ntrp.NTRPHeader_e.OPENPIPE
-        packet.dataID = ord(self.id)
+        packet = ntrp.NTRPPacket('OPENPIPE',ord(self.id))
         packet.data   = self.pipeType()
         self.radio.txHandler(packet,ntrp.NTRP_ROUTER_ID)
     
     def txCLOSEPIPE(self):
-        packet = ntrp.NTRPPacket()
-        packet.header = ntrp.NTRPHeader_e.CLOSEPIPE
-        packet.dataID = self.id
+        packet = ntrp.NTRPPacket('CLOSEPIPE',ord(self.id))
+        self.radio.txHandler(packet,ntrp.NTRP_ROUTER_ID)
+
+    def txFULLRX(self):
+        packet = ntrp.NTRPPacket('FULLRX',ord(self.id))
+        self.radio.txHandler(packet,ntrp.NTRP_ROUTER_ID)
+    
+    def txFULLTX(self):
+        packet = ntrp.NTRPPacket('FULLTX',ord(self.id))
         self.radio.txHandler(packet,ntrp.NTRP_ROUTER_ID)
 
     def pipeType(self):
@@ -162,7 +166,7 @@ class NorthNRF(NorthPipe):
         return arr                  #[CH,BANDWIDTH,[0,0,0,0,1]]
         
     def destroy(self):
-        self.txCLOSEPIPE()
+        self.txCLOSEPIPE()  
         self.radio.unsubPipe(self.id)
         self.isActive = False
 

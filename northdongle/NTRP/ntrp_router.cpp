@@ -30,13 +30,13 @@ using namespace std;
 
 #define SERIAL_TIMEOUT_MS    100
 
-
 NTRP_Router::NTRP_Router(SERIAL_DEF* serial_port_x, RADIO_DEF* radio){
     serial_port = serial_port_x;
     nrf = radio;
     nrf_pipe_index = 0;
     nrf_last_transmit_index = -1;
     _ready = false;
+    mode = R_MODE_TRX;
 }
 
 uint8_t NTRP_Router::sync(uint16_t timeout_ms){
@@ -128,13 +128,14 @@ uint8_t NTRP_Router::receiveMaster(NTRP_Message_t* msg){
 
 /* Transmit the NTRP_Message_t to TARGET NRF PIPE */
 uint8_t NTRP_Router::transmitPipe( uint8_t pipeid, const NTRP_Packet_t* packet,uint8_t size){
+    if(mode==R_MODE_FULLRX) return 0;
     uint8_t isFound = 0;
     if (pipeid==0) return 0; /*Pipe ID needs to be a ascii char*/
     for (uint8_t i = 0; i < nrf_pipe_index; i++)
     {
         if(nrf_pipe[i].id != pipeid) continue;
         
-        nrf->stopListening();                           /* RF24 -> Standby I */
+        if(mode==R_MODE_TRX) nrf->stopListening();        /* RF24 -> Standby I */
         
         isFound = 1;
         if(nrf_last_transmit_index!=i){
@@ -144,17 +145,20 @@ uint8_t NTRP_Router::transmitPipe( uint8_t pipeid, const NTRP_Packet_t* packet,u
          
         NTRP_PackUnite(_txBuffer,size,packet);    
         nrf->write(_txBuffer,size); /*Write to TX FIFO*/
-        nrf->startListening();  /*Set to RX Mode again*/
+
+        if(mode==R_MODE_TRX) nrf->startListening();  /*Set to RX Mode again*/
     }
     return isFound;
 }
 
 void NTRP_Router::transmitPipeFast(uint8_t pipeid,const uint8_t* raw_sentence, uint8_t size){
+    if(mode==R_MODE_FULLRX) return;
+
     for (uint8_t i = 0; i < nrf_pipe_index; i++)
     {
         if(nrf_pipe[i].id != pipeid) continue;
             
-        nrf->stopListening(); // Set to TX Mode for transaction
+        if(mode==R_MODE_TRX) nrf->stopListening(); // Set to TX Mode for transaction
 
         if(nrf_last_transmit_index != i){
             nrf->openWritingPipe(nrf_pipe[i].address);  // Set Main TX address
@@ -162,11 +166,13 @@ void NTRP_Router::transmitPipeFast(uint8_t pipeid,const uint8_t* raw_sentence, u
         }
 
         nrf->write(raw_sentence, size);       
-        nrf->startListening(); // Set to RX Mode again
+        if(mode==R_MODE_TRX) nrf->startListening(); // Set to RX Mode again
     }
 }
 
 uint8_t NTRP_Router::receivePipe(NTRP_Message_t* msg){
+    if(mode==R_MODE_FULLTX) return 0;
+
     uint8_t pipe = 0;
     if(nrf->available(&pipe)){
         nrf->read(_buffer,NTRP_MAX_MSG_SIZE);
@@ -180,9 +186,6 @@ uint8_t NTRP_Router::receivePipe(NTRP_Message_t* msg){
     return 0;
 }
     
-
-
-
 /* Router Handler : Communications Core Function 
 *  Route the NTRP_Message_t to desired address
 *  It is not optimised for router.
@@ -227,6 +230,16 @@ void NTRP_Router::routerCOM(NTRP_Packet_t* cmd, uint8_t size){
         if(openPipe(pipe)){debug("NRF Pipe Opened");}
         else{debug("NRF Pipe Error");}
     break;
+    case R_TRX:
+        debug("NRF TRX");
+        mode = R_MODE_TRX; break;
+    case R_FULLRX:
+        debug("NRF FULLRX");
+        mode = R_MODE_FULLRX; break;
+    case R_FULLTX:
+        debug("NRF FULLTX");
+        nrf->stopListening();
+        mode = R_MODE_FULLTX; break;
     case R_CLOSEPIPE:
         /*Not Implemented*/
     break;

@@ -37,7 +37,7 @@ class NorthRadio(NorthPort):
     DEFAULT_BAUD = 115200
     
     WAIT_TICK     = 0.001     #1 ms  Wait Tick
-    TRANSMIT_HALT = 0.001     #1 ms Transmit Stop
+    TRANSMIT_HALT = 0.0005    #500 us Transmit Stop
     #Want to keep transmit speed same as the baudrate & dongle process speed
      
     def __init__(self, com=None , baud=DEFAULT_BAUD):
@@ -96,40 +96,6 @@ class NorthRadio(NorthPort):
             if  test_id_value > max_id_value : max_id_value = test_id_value 
         return chr(max_id_value)
 
-
-    def txHandler(self,pck=ntrp.NTRPPacket, receiverid='0', force=False):
-        if(self.mode == self.NO_CONNECTION): return
-        msg = ntrp.NTRPMessage()
-        msg.talker = self.radioid
-        msg.receiver = receiverid
-        msg.packetsize = len(pck.data)+2
-
-        msg.header = pck.header
-        msg.dataID = pck.dataID
-        msg.data   = pck.data
-        arr = ntrp.NTRP_Unite(msg)
-        if arr == None :
-            print(self.com+":/>" + " Packet Lost" ) 
-            return
-        
-        """ <DEBUG TRANSMIT MSG>
-        ntrp.NTRP_LogMessage(msg)
-        print(ntrp.NTRP_bytes(arr))
-        """
-        if force==True:
-            self.transmit(arr)
-        else:    
-            self.txQueue.put(block=True,item=arr)
-            time.sleep(self.TRANSMIT_HALT)
-        
-    def txProcess(self):
-        while self.isActive and self.mode != self.NO_CONNECTION:
-            arr = self.txQueue.get()
-            if arr != None:
-                self.transmit(arr)
-                time.sleep(self.TRANSMIT_HALT) #Transmit can't speed up to infinity
-                self.txQueue.task_done()
-
     def rxHandler(self,msg=ntrp.NTRPMessage):
 
         """ <DEBUG INCOMING MSG>
@@ -182,6 +148,38 @@ class NorthRadio(NorthPort):
                 #Parse Success, handle the NTRPMessage
                 self.rxHandler(msg) 
 
+    def txHandler(self,pck=ntrp.NTRPPacket, receiverid='0', force=False):
+        if(self.mode == self.NO_CONNECTION): return
+        msg = ntrp.NTRPMessage()
+        msg.talker = self.radioid
+        msg.receiver = receiverid
+        msg.packetsize = len(pck.data)+2
+
+        msg.header = pck.header
+        msg.dataID = pck.dataID
+        msg.data   = pck.data
+        arr = ntrp.NTRP_Unite(msg)
+        if arr == None :
+            print(self.com+":/>" + " Packet Lost" ) 
+            return
+        
+        """ <DEBUG TRANSMIT MSG>
+        ntrp.NTRP_LogMessage(msg)
+        print(ntrp.NTRP_bytes(arr))
+        """
+        if force==True:
+            self.transmit(arr)
+        else:    
+            self.txQueue.put(block=True,item=arr)
+            time.sleep(self.TRANSMIT_HALT)
+        
+    def txProcess(self):
+        while self.isActive and self.mode != self.NO_CONNECTION:
+            arr = self.txQueue.get()
+            if arr != None:
+                self.transmit(arr)
+                time.sleep(self.TRANSMIT_HALT) #Transmit can't speed up to infinity
+                self.txQueue.task_done()
 
     def destroy(self):
         self.isActive = False
