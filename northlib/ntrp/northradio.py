@@ -36,8 +36,8 @@ class NorthRadio(NorthPort):
 
     DEFAULT_BAUD = 115200
     
-    WAIT_TICK = 0.001        #1 ms  Wait Tick
-    TRANSMIT_HALT = 0.01     #10ms Transmit Stop
+    WAIT_TICK     = 0.001     #1 ms  Wait Tick
+    TRANSMIT_HALT = 0.001     #1 ms Transmit Stop
     #Want to keep transmit speed same as the baudrate & dongle process speed
      
     def __init__(self, com=None , baud=DEFAULT_BAUD):
@@ -97,7 +97,7 @@ class NorthRadio(NorthPort):
         return chr(max_id_value)
 
 
-    def txHandler(self,pck=ntrp.NTRPPacket, receiverid='0'):
+    def txHandler(self,pck=ntrp.NTRPPacket, receiverid='0', force=False):
         if(self.mode == self.NO_CONNECTION): return
         msg = ntrp.NTRPMessage()
         msg.talker = self.radioid
@@ -108,12 +108,19 @@ class NorthRadio(NorthPort):
         msg.dataID = pck.dataID
         msg.data   = pck.data
         arr = ntrp.NTRP_Unite(msg)
+        if arr == None :
+            print(self.com+":/>" + " Packet Lost" ) 
+            return
         
         """ <DEBUG TRANSMIT MSG>
         ntrp.NTRP_LogMessage(msg)
         print(ntrp.NTRP_bytes(arr))
         """
-        self.txQueue.put(block=True,item=arr)
+        if force==True:
+            self.transmit(arr)
+        else:    
+            self.txQueue.put(block=True,item=arr)
+            time.sleep(self.TRANSMIT_HALT)
         
     def txProcess(self):
         while self.isActive and self.mode != self.NO_CONNECTION:
@@ -125,11 +132,12 @@ class NorthRadio(NorthPort):
 
     def rxHandler(self,msg=ntrp.NTRPMessage):
 
-        """ <DEBUG INCOMING MSG>""" 
+        """ <DEBUG INCOMING MSG>
         ntrp.NTRP_LogMessage(msg)
-        
+        """
+
         if(msg.header == ntrp.NTRPHeader_e.MSG):
-            print(self.com + ":/"+msg.talker+"> " + msg.data.decode('ascii',errors='ignore'))
+            print(str(time.time()*1000)[10:] + " " + self.com + ":/"+msg.talker+"> " + msg.data.decode('ascii',errors='ignore'))
 
         #Find related pipe
         for pipe in self.pipes:

@@ -1,4 +1,4 @@
-
+#include <Arduino.h>
 #include <SPI.h>
 #include "RF24.h"
 
@@ -6,15 +6,16 @@
 #include "ntrp_router.h"
 
 RF24 rfmodule(8,9);
-NTRP_Router router(&Serial,&rfmodule);
+NTRP_Router router(&SerialUSB,&rfmodule);
 
 NTRP_Packet_t testpacket;
-NTRP_Pipe_t pipe ={'1',0,0,"00001"};
+NTRP_Pipe_t pipe = {'1',0,0,'00001'};
 
 void setup() {
 
-  Serial.begin(115200);
-  
+  //Serial.begin(115200);
+  SerialUSB.begin(115200);
+
   if(!rfmodule.begin())while(1);
   if(!router.sync()) while(1);
 

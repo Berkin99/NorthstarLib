@@ -59,6 +59,18 @@ uint8_t NTRP_Router::sync(uint16_t timeout_ms){
 
 }
 
+void NTRP_Router::task(void){
+    /* Continously checks serial port for catch a success ntrp_message */
+    static NTRP_Message_t ntrp_message;
+    if(receiveMaster(&ntrp_message)){
+        route(&ntrp_message);
+    }
+    /* Continously checks nrf buffer for catch a success ntrp_message */
+    if(receivePipe(&ntrp_message)){
+        route(&ntrp_message); 
+    }
+}
+
 void NTRP_Router::debug(const char* msg){
     NTRP_Message_t temp;
     temp.talkerID = NTRP_ROUTER_ID;
@@ -77,30 +89,17 @@ void NTRP_Router::debug(const char* msg){
 }
 
 
-void NTRP_Router::task(void){
-    /* Continously checks serial port for catch a success ntrp_message */
-    static NTRP_Message_t ntrp_message;
-    if(receiveMaster(&ntrp_message)){
-        route(&ntrp_message);
-    }
-    /* Continously checks nrf buffer for catch a success ntrp_message */
-    if(receivePipe(&ntrp_message)){
-        route(&ntrp_message); 
-    }
-}
-
-
 /* Transmit the NTRP_Message_t to MASTER COMPUTER */
 void NTRP_Router::transmitMaster(const NTRP_Message_t* msg){
-    if(!_ready)return;
     if(NTRP_Unite(_txBuffer, msg)){
         serial_port->write(_txBuffer,msg->packetsize+5);
     }
 }
 
-/* Receive the NTRP_Message_t from MASTER COMPUTER */
+/** Receive the NTRP_Message_t from MASTER COMPUTER 
+ *  Tries to receive new msg ? OK : Error
+*/
 uint8_t NTRP_Router::receiveMaster(NTRP_Message_t* msg){
-    if(!_ready)return 0;
     if(!serial_port->available())return 0;
     _buffer[0] = serial_port->read();
 
@@ -112,38 +111,40 @@ uint8_t NTRP_Router::receiveMaster(NTRP_Message_t* msg){
 
     for (uint8_t i = 0; i < 3; i++){_buffer[i+1] = serial_port->read();}
 
-    if(_buffer[1]!=NTRP_MASTER_ID)return 0;/*Receive master needed to has MASTER ID*/
+    if(_buffer[1]!=NTRP_MASTER_ID)return 0; /* Receive master needed to has MASTER ID */
     uint8_t packetsize = _buffer[3];
+    if(packetsize>NTRP_MAX_PACKET_SIZE)return 0; /* Max Packet size error */
 
     _timer = 0;
     while((serial_port->available()<packetsize+1) && (_timer<SERIAL_TIMEOUT_MS)){
         _timeout_tick(1);}
 
     for (uint8_t i = 0; i < packetsize+1; i++)
-    {_buffer[i+4] = serial_port->read();}
+    {_buffer[i+4] = serial_port->read(); /*_buffer[4] is start of the NTRP_Packet*/
+    }
 
-    return NTRP_Parse(msg,_buffer);
+    return NTRP_Parse(msg , _buffer);
 }
 
 /* Transmit the NTRP_Message_t to TARGET NRF PIPE */
 uint8_t NTRP_Router::transmitPipe( uint8_t pipeid, const NTRP_Packet_t* packet,uint8_t size){
     uint8_t isFound = 0;
+    if (pipeid==0) return 0; /*Pipe ID needs to be a ascii char*/
     for (uint8_t i = 0; i < nrf_pipe_index; i++)
     {
         if(nrf_pipe[i].id != pipeid) continue;
-
-        isFound = 1;    
-        nrf->stopListening(); // Set to TX Mode for transaction
         
-        if(nrf_last_transmit_index != i){
-            nrf->openWritingPipe(nrf_pipe[i].address);
+        nrf->stopListening();                           /* RF24 -> Standby I */
+        
+        isFound = 1;
+        if(nrf_last_transmit_index!=i){
+            nrf->openWritingPipe(nrf_pipe[i].address);   /* RF24 -> TX Settling (!!!CHANGES THE RX0_ADDRESS TOO!!!)*/
             nrf_last_transmit_index = i;
-        }
-        uint8_t* raw_sentence = (uint8_t*)malloc(size);
-        NTRP_PackUnite(raw_sentence,size,packet);
-        nrf->write(raw_sentence,size);
-        free(raw_sentence);
-        nrf->startListening(); // Set to RX Mode again
+        }    
+         
+        NTRP_PackUnite(_txBuffer,size,packet);    
+        nrf->write(_txBuffer,size); /*Write to TX FIFO*/
+        nrf->startListening();  /*Set to RX Mode again*/
     }
     return isFound;
 }
@@ -205,11 +206,10 @@ switch (msg->receiverID)
 /* Router Handler : Router Commands */
 void NTRP_Router::routerCOM(NTRP_Packet_t* cmd, uint8_t size){
 
-    /*SWITCH TO ROUTER COMMAND*/
-switch (cmd->header)
-{
+    /* SWITCH TO ROUTER COMMAND */
+    switch (cmd->header){
     case NTRP_MSG:{
-        debug("Router Message ACK\n");
+        debug("Router Message ACK");
         break;
     }
     case R_OPENPIPE:

@@ -21,7 +21,7 @@ class Controller():
     NTRP Joystick Controller 
     """
     
-    def __init__(self,pipe):
+    def __init__(self,pipe=NorthPipe):
 
         self.pipe = pipe
         pygame.init()
@@ -40,13 +40,13 @@ class Controller():
 
     def ctrlProcess(self):
         while self.isAlive:
-            pygame.event.pump()  # Only Joystick process
-            for i in range(4):
-                self.axis[i] = (int)(((self.joystick.get_axis(i)+1)*255)/2)
-
-            #print(self.axis)
+            #pygame.event.pump()  # Only Joystick process
+            for event in pygame.event.get(pygame.JOYAXISMOTION):
+                for i in range(4):
+                    self.axis[i] = (int)(((self.joystick.get_axis(i)+1)*255)/2)
+            
+            print(self.axis)
             self.pipe.txCMD(bytearray(self.axis))
-            time.sleep(0.01)
        
     def destroy(self):
         self.isAlive = False

@@ -12,14 +12,8 @@ import northlib.ncmd.controller as ncmd
 TESTMESSAGE = "Master Test Message"
 
 """
-Test messages
-MSG -> return ACK : OK
-SET -> set the target data id [NEEDED TOC]
-GET -> get the target data id : OK
-CMD -> OK
+class NTX main
 
-Speed test
-DS4 Controller test 
 """
 
 if __name__ == '__main__':
@@ -33,19 +27,19 @@ if __name__ == '__main__':
     radio.beginRadio()
 
     time.sleep(1)
-    rf_pipe = NorthNRF(0,0,address="3030303031") 
+    rf_pipe = NorthNRF(0,0,address="E7E7E7E300") 
     print("RF Radio ID = " + str(ord(rf_pipe.id)))
-    #ctrl = ncmd.Controller(rf_pipe)
+    ctrl = ncmd.Controller(rf_pipe)
 
     while 1:
-        #pass
-        #rf_pipe.radio.transmitNTRP(ntrp.NTRPPacket('MSG'),'E')
-        rf_pipe.txMSG("Test Message")
-        time.sleep(0.01)        
+        pass
+        #rf_pipe.radio.txHandler(ntrp.NTRPPacket('MSG'),'E')
+        #rf_pipe.txMSG("Test Message")
+        #time.sleep(0.01)        
         #rf_pipe.txCMD(bytearray([31,62,93,0]))
-        if(rf_pipe.rxbuffer.isAvailable()):
-            ntrp.NTRP_LogMessage(rf_pipe.rxbuffer.read())   
+        #if(rf_pipe.rxbuffer.isAvailable()):
+        #    ntrp.NTRP_LogMessage(rf_pipe.rxbuffer.read())   
         
-    #ctrl.destroy()
+    ctrl.destroy()
     radioManager.closeAvailableRadios()
     sys.exit()

@@ -66,9 +66,9 @@ class NorthPipe():
         if(self.rxbuffer.isAvailable() == False): return 0
         return timer
 
-    def transmitPacket(self,txPacket = ntrp.NTRPPacket):
+    def transmitPacket(self,txPacket = ntrp.NTRPPacket,force=False):
         #Packet with receiver ID = PIPE ID
-        self.radio.txHandler(txPacket,self.id)     
+        self.radio.txHandler(txPacket,self.id,force)     
 
     def txNAK(self):
         self.txpck = ntrp.NTRPPacket('NAK')
@@ -99,7 +99,7 @@ class NorthPipe():
         self.txpck = ntrp.NTRPPacket('CMD')
         self.txpck.dataID = 0
         self.txpck.data = channels   
-        self.transmitPacket(self.txpck)
+        self.transmitPacket(self.txpck,force=False)
         
 class NorthNRF(NorthPipe):
         
@@ -144,7 +144,7 @@ class NorthNRF(NorthPipe):
         packet = ntrp.NTRPPacket()
         packet.header = ntrp.NTRPHeader_e.OPENPIPE
         packet.dataID = ord(self.id)
-        packet.data   = self.getNrfData()
+        packet.data   = self.pipeType()
         self.radio.txHandler(packet,ntrp.NTRP_ROUTER_ID)
     
     def txCLOSEPIPE(self):
@@ -153,13 +153,13 @@ class NorthNRF(NorthPipe):
         packet.dataID = self.id
         self.radio.txHandler(packet,ntrp.NTRP_ROUTER_ID)
 
-    def getNrfData(self):
+    def pipeType(self):
         #NRTP_Pipe_t in the router
         arr = bytearray()
         arr.append(self.channel)    #Channelbyte
         arr.append(self.bandwidth)  #Bandwidthbyte 
         arr.extend(self.address)    #5 byte address
-        return arr #[CH,BANDWIDTH,[0,0,0,0,1]]
+        return arr                  #[CH,BANDWIDTH,[0,0,0,0,1]]
         
     def destroy(self):
         self.txCLOSEPIPE()

@@ -30,11 +30,11 @@
 #include "ntrp.h"
 #include "RF24.h"
 
-#define SERIAL_DEF          HardwareSerial //UARTClass 
-#define RADIO_DEF           RF24
+#define SERIAL_DEF          Serial_ //HardwareSerial //UARTClass /*Serial Com Object*/
+#define RADIO_DEF           RF24                       /*NRF Object*/ 
 
 #define NTRP_DEFAULT_BAUD   115200
-#define NTRP_RX_NRF         0xE7E7E7E700LL
+#define NTRP_RX_NRF         0xE7E7E7E900LL
 #define NRF_MAX_PIPE_SIZE   6
 
 typedef enum{
@@ -44,35 +44,35 @@ typedef enum{
 }NTRP_RouterHeader_e;
 
 typedef struct{
-  uint8_t id;
-  uint8_t channel;
-  uint8_t bandwidth;
-  uint8_t address[5];
+  uint8_t id;         /*Pipe ID (Unique) : Represents the 5 byte address*/
+  uint8_t channel;    /*Channel (Not Implemented)*/
+  uint8_t bandwidth;  /*Bandwidth (Not Implemented)*/
+  uint8_t address[5]; /*5 byte address (Unique)*/
 }NTRP_Pipe_t;
 
 class NTRP_Router{
+    
     private:
-    bool _ready;
+    bool _ready; /* Syncronisation ? OK : ERROR */       
     SERIAL_DEF* serial_port;
     RADIO_DEF* nrf;
 
-    NTRP_Pipe_t nrf_pipe[NRF_MAX_PIPE_SIZE];
-    uint8_t nrf_pipe_index;
-    int8_t nrf_last_transmit_index;
+    NTRP_Pipe_t nrf_pipe[NRF_MAX_PIPE_SIZE];  /* 6 PIPE */
+    uint8_t nrf_pipe_index;                   /* Current PIPE Index */
+    int8_t nrf_last_transmit_index;           /* Last Transmit Channel Index */
 
     uint32_t _timer;
     void _timeout_tick(uint16_t tick = 1);
     
-    uint8_t _buffer[NTRP_MAX_MSG_SIZE];
-    uint8_t _txBuffer[NTRP_MAX_MSG_SIZE];
-    
+    uint8_t _buffer[NTRP_MAX_MSG_SIZE];   /* Master RX buffer */
+    uint8_t _txBuffer[NTRP_MAX_MSG_SIZE]; /* Slave Transmit buffer */
+
     public:
     NTRP_Router(SERIAL_DEF* serial_port_x , RADIO_DEF* radio);
 
     uint8_t sync(uint16_t timeout_ms = 10000);
-
-    void debug(const char* msg);
     void task(void);
+    void debug(const char* msg);
 
     uint8_t receiveMaster(NTRP_Message_t* msg);
     void transmitMaster(const NTRP_Message_t* msg);
