@@ -7,6 +7,7 @@ from   northlib.ntrp.ntrpbuffer import NTRPBuffer
 from   northlib.ntrp.northradio import NorthRadio
 from   northlib.ntrp.northpipe import NorthPipe,NorthNRF
 import northlib.ntrp.ntrp as ntrp
+import northlib.ncmd.controller as ncmd
 
 TESTMESSAGE = "Master Test Message"
 
@@ -34,15 +35,17 @@ if __name__ == '__main__':
     time.sleep(1)
     rf_pipe = NorthNRF(0,0,address="3030303031") 
     print("RF Radio ID = " + str(ord(rf_pipe.id)))
-    
-    timer = 0.0
-    while timer<20:
-        #rf_pipe.txMSG("Test Message")
-        #rf_pipe.txCMD(bytearray([31,62,93,0]))
-        
-        if(rf_pipe.rxbuffer.isAvailable()):
-            ntrp.NTRP_LogMessage(rf_pipe.rxbuffer.read())
-        time.sleep(1)
-        timer+=1
+    #ctrl = ncmd.Controller(rf_pipe)
 
+    while 1:
+        #pass
+        #rf_pipe.radio.transmitNTRP(ntrp.NTRPPacket('MSG'),'E')
+        rf_pipe.txMSG("Test Message")
+        time.sleep(0.01)        
+        #rf_pipe.txCMD(bytearray([31,62,93,0]))
+        if(rf_pipe.rxbuffer.isAvailable()):
+            ntrp.NTRP_LogMessage(rf_pipe.rxbuffer.read())   
+        
+    #ctrl.destroy()
     radioManager.closeAvailableRadios()
+    sys.exit()

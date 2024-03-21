@@ -1,3 +1,25 @@
+/**
+ * __  __ ____ _  __ ____ ___ __  __
+ * \ \/ // __// |/ //  _// _ |\ \/ /
+ *  \  // _/ /    /_/ / / __ | \  /
+ *  /_//___//_/|_//___//_/ |_| /_/
+ *
+ * Yeniay Control Computer Firmware
+ *
+ * Copyright (C) 2022 Yeniay
+ *
+ * This program is free software: you
+ * can redistribute it and/or modify it
+ * under the terms of the GNU General
+ * Public License as published by the
+ * Free Software Foundation, in version 3.
+ *
+ * You should have received a copy of
+ * the GNU General Public License along
+ * with this program. If not, see
+ * <http://www.gnu.org/licenses/>.
+ */
+
 #ifndef __NTRP_ROUTER_H__
 #define __NTRP_ROUTER_H__
 
@@ -42,10 +64,11 @@ class NTRP_Router{
     void _timeout_tick(uint16_t tick = 1);
     
     uint8_t _buffer[NTRP_MAX_MSG_SIZE];
+    uint8_t _txBuffer[NTRP_MAX_MSG_SIZE];
     
     public:
     NTRP_Router(SERIAL_DEF* serial_port_x , RADIO_DEF* radio);
-    
+
     uint8_t sync(uint16_t timeout_ms = 10000);
 
     void debug(const char* msg);

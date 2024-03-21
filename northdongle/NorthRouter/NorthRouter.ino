@@ -23,7 +23,8 @@ void setup() {
   //router.openPipe(pipe);
 }
 
+uint32_t loop_timer = 0;
+
 void loop() {
   router.task();
-  //router.transmitPipe('1',&testpacket,5);
 }

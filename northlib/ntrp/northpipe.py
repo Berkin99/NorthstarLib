@@ -31,28 +31,31 @@ class NorthPipe():
     NRF CLASS -> NRF ROUTER
     """
 
-    def __init__(self, pipe_id = 'X', radio = NorthRadio):
+    def __init__(self, pipe_id = '1', radio = NorthRadio):
         self.id = pipe_id                    # Agent ID
 
+        # LORA >
         # The Pipe ID is should be same with target agent ID
+        # RF DONGLE >
         # Agent ID is represents the rf adress when use NTRP_Router Dongle
         # Agent ID identifies the target agent when use UART Lora Module
         self.radio = radio            
-        self.radio.subPipe(pipe=self)
+        self.radio.subPipe(pipe=self)  #Subscribe to Radio
 
-        self.rxbuffer = NTRPBuffer(10)
-        self.txpck = ntrp.NTRPPacket()
+        self.rxbuffer = NTRPBuffer(20) #LIFO Ring Buffer
         self.newPacketCallBack = None
         
     def append(self,msg):
         self.rxbuffer.append(msg)
         if self.newPacketCallBack != None:
-            self.newPacketCallBack()
+            self.newPacketCallBack() 
 
     def setCallBack(self, func):
+        #Data Ready Callback function 
+        #It blocks radio rxThread : keep it small 
         self.newPacketCallBack = func
 
-    def waitConnection(self, timeout = 0.5):
+    def waitConnection(self, timeout = 1):
         self.txMSG("ACK Request")
     
         timer = 0.0
@@ -64,9 +67,10 @@ class NorthPipe():
         return timer
 
     def transmitPacket(self,txPacket = ntrp.NTRPPacket):
-        self.radio.transmitNTRP(txPacket,self.id)     
+        #Packet with receiver ID = PIPE ID
+        self.radio.txHandler(txPacket,self.id)     
 
-    def txNAK(self):               
+    def txNAK(self):
         self.txpck = ntrp.NTRPPacket('NAK')
         self.transmitPacket(self.txpck)     
 
@@ -97,7 +101,6 @@ class NorthPipe():
         self.txpck.data = channels   
         self.transmitPacket(self.txpck)
         
-
 class NorthNRF(NorthPipe):
         
     """
@@ -130,11 +133,11 @@ class NorthNRF(NorthPipe):
     def setChannel(self,ch=0):
         self.channel = ch
 
-    def setBandwidth(self,bandwidth=NRF_1000KBPS):
-        self.bandwidth = bandwidth
+    def setBandwidth(self,bw=NRF_1000KBPS):
+        self.bandwidth = bw
     
-    def setAddress(self, address="E7E7E7E900"):
-        self.address = bytes.fromhex(address)
+    def setAddress(self, adr="E7E7E7E900"):
+        self.address = bytes.fromhex(adr)
         if(len(self.address) != 5): raise ValueError() #NRF Address is 5 bytes
     
     def txOPENPIPE(self):
@@ -142,16 +145,16 @@ class NorthNRF(NorthPipe):
         packet.header = ntrp.NTRPHeader_e.OPENPIPE
         packet.dataID = ord(self.id)
         packet.data   = self.getNrfData()
-        self.radio.transmitNTRP(packet,ntrp.NTRP_ROUTER_ID)
+        self.radio.txHandler(packet,ntrp.NTRP_ROUTER_ID)
     
     def txCLOSEPIPE(self):
         packet = ntrp.NTRPPacket()
         packet.header = ntrp.NTRPHeader_e.CLOSEPIPE
         packet.dataID = self.id
-        self.radio.transmitNTRP(packet,ntrp.NTRP_ROUTER_ID)
+        self.radio.txHandler(packet,ntrp.NTRP_ROUTER_ID)
 
-    #NRTP_Pipe_t in the router
     def getNrfData(self):
+        #NRTP_Pipe_t in the router
         arr = bytearray()
         arr.append(self.channel)    #Channelbyte
         arr.append(self.bandwidth)  #Bandwidthbyte 

@@ -10,7 +10,7 @@
 
 import time
 import threading
-
+import queue
 import northlib.ntrp.ntrp as ntrp
 from northlib.ntrp.northport import NorthPort
 from northlib.ntrp.ntrpbuffer import NTRPBuffer
@@ -35,22 +35,26 @@ class NorthRadio(NorthPort):
     """
 
     DEFAULT_BAUD = 115200
-    WAIT_TICK = 0.0001
-
+    
+    WAIT_TICK = 0.001        #1 ms  Wait Tick
+    TRANSMIT_HALT = 0.01     #10ms Transmit Stop
+    #Want to keep transmit speed same as the baudrate & dongle process speed
+     
     def __init__(self, com=None , baud=DEFAULT_BAUD):
         super().__init__(com, baud)
         self.isSync = False
         self.pipes = []
         self.radioid = ntrp.NTRP_MASTER_ID
+        self.txQueue = queue.Queue(5)
 
     def syncRadio(self,timeout = 2):
         timer = 0.0
         msg = ""
         while self.isSync == False and timer<timeout:
             temp = self.receive()
-            if temp == None:
+            if temp == None :
+                timer +=   self.WAIT_TICK
                 time.sleep(self.WAIT_TICK) 
-                timer += self.WAIT_TICK
                 continue
             
             try: msg += temp.decode()
@@ -68,28 +72,12 @@ class NorthRadio(NorthPort):
     def beginRadio(self):
         if self.mode == self.READY:
             self.isActive = True
+            self.txThread = threading.Thread(target=self.txProcess,daemon=False)
+            self.txThread.start()
             self.rxThread = threading.Thread(target=self.rxProcess,daemon=False)
             self.rxThread.start()
             return True
         return False 
-
-    def transmitNTRP(self,pck=ntrp.NTRPPacket, receiverid='0'):
-        if(self.mode == self.NO_CONNECTION): return
-        msg = ntrp.NTRPMessage()
-        msg.talker = self.radioid
-        msg.receiver = receiverid
-        msg.packetsize = len(pck.data)+2
-
-        msg.header = pck.header
-        msg.dataID = pck.dataID
-        msg.data   = pck.data
-        arr = ntrp.NTRP_Unite(msg)
-
-        """ <DEBUG TRANSMIT MSG> 
-        ntrp.NTRP_LogMessage(msg)
-        print(ntrp.NTRP_bytes(arr))
-        """
-        self.transmit(arr)
 
     def subPipe(self,pipe):
         self.pipes.append(pipe)     #Subscribe to the pipes
@@ -108,43 +96,73 @@ class NorthRadio(NorthPort):
             if  test_id_value > max_id_value : max_id_value = test_id_value 
         return chr(max_id_value)
 
+
+    def txHandler(self,pck=ntrp.NTRPPacket, receiverid='0'):
+        if(self.mode == self.NO_CONNECTION): return
+        msg = ntrp.NTRPMessage()
+        msg.talker = self.radioid
+        msg.receiver = receiverid
+        msg.packetsize = len(pck.data)+2
+
+        msg.header = pck.header
+        msg.dataID = pck.dataID
+        msg.data   = pck.data
+        arr = ntrp.NTRP_Unite(msg)
+        
+        """ <DEBUG TRANSMIT MSG>
+        ntrp.NTRP_LogMessage(msg)
+        print(ntrp.NTRP_bytes(arr))
+        """
+        self.txQueue.put(block=True,item=arr)
+        
+    def txProcess(self):
+        while self.isActive and self.mode != self.NO_CONNECTION:
+            arr = self.txQueue.get()
+            if arr != None:
+                self.transmit(arr)
+                time.sleep(self.TRANSMIT_HALT) #Transmit can't speed up to infinity
+                self.txQueue.task_done()
+
     def rxHandler(self,msg=ntrp.NTRPMessage):
 
-        """ <DEBUG INCOMING MSG>
+        """ <DEBUG INCOMING MSG>""" 
         ntrp.NTRP_LogMessage(msg)
-        """        
-       
+        
         if(msg.header == ntrp.NTRPHeader_e.MSG):
             print(self.com + ":/"+msg.talker+"> " + msg.data.decode('ascii',errors='ignore'))
 
+        #Find related pipe
         for pipe in self.pipes:
-            if pipe.id == msg.talker:
-                pipe.append(msg)
-                return
-
+            if pipe.id == msg.talker: pipe.append(msg)
     
     def rxProcess(self):
         #If connection lost, Rx process ends.
-        #Wait tick value is not necessary but slowing things is usually good
         while self.isActive and (self.mode != self.NO_CONNECTION):
-            time.sleep(self.WAIT_TICK)
             byt = None
             byt = self.receive()
             if byt == None: continue
             if byt != ntrp.NTRP_STARTBYTE.encode(): continue
             
-            arr = bytearray()
-            arr.append(byt[0])
+            arr = bytearray(byt)
 
-            while self.port.in_waiting < 3: pass
+            timer = 0 
+            while self.port.in_waiting < 3 and timer < 0.1:
+                time.sleep(self.WAIT_TICK)
+                timer += self.WAIT_TICK     
 
             arex = self.port.read(2)
             arr.extend(arex)
 
             packetsize = self.port.read(1)[0]
+            if(packetsize>ntrp.NTRP_MAX_MSG_SIZE): continue
+
             arr.append(packetsize)
 
-            while self.port.in_waiting < packetsize+1: pass
+            timer = 0
+            while self.port.in_waiting < packetsize+1 and timer < 0.1:
+                time.sleep(self.WAIT_TICK)
+                timer += self.WAIT_TICK     
+
             arex = self.port.read(packetsize+1)
             arr.extend(arex)
 

@@ -33,13 +33,12 @@ def radioSearch():
         nr = None
         try:
             nr = NorthRadio(com)
+            if nr.syncRadio(2):
+                print('RadioManager:/> NTRP Radio found : '+ com)
+                availableRadios.append(nr)
+            else: nr.destroy()
         except: serial.SerialException
         
-        if nr.syncRadio(2):
-            print('RadioManager:/> NTRP Radio found : '+ com)
-            availableRadios.append(nr)
-        else: nr.destroy()
-
 def closeAvailableRadios():
     #Reset the radios list
     for radio in availableRadios:

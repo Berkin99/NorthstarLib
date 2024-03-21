@@ -16,7 +16,10 @@ __all__ = ['NTRPBuffer']
 class NTRPBuffer():
 
     """ 
-    LIFO Ring buffer 
+    LIFO Ring buffer.
+    NTRP Protocol needs to fast communication
+    So LIFO ring buffer helps get latest data
+    & memory management. 
     """
     
     def __init__(self, size=30):
@@ -30,9 +33,9 @@ class NTRPBuffer():
         self.sp = 0
 
     def _waitMutex(self):
-        time.sleep(0.001)
+        time.sleep(0.0001)
         while self.mutex == True:
-            time.sleep(0.001)
+            time.sleep(0.0001)
     
     def append(self,msg):
         self._waitMutex()

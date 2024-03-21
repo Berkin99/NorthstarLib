@@ -80,13 +80,16 @@ def NTRP_Parse(raw_bytearray=bytearray):
 
     msg.data = bytearray()
 
-    if(msg.packetsize<2 or msg.packetsize>NTRP_MAX_PACKET_SIZE) : return None 
+    if (msg.packetsize<2 or msg.packetsize>NTRP_MAX_PACKET_SIZE) : return None 
     datasize = msg.packetsize-2
 
+    found = 0
     for header in NTRPHeader_e:
         if header.value == raw_bytearray[4]:    
             msg.header = header
+            found = 1
             break
+    if found==0: return None
 
     msg.dataID = int(raw_bytearray[5])
     

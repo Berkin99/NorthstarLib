@@ -1,16 +1,34 @@
+/**
+ * __  __ ____ _  __ ____ ___ __  __
+ * \ \/ // __// |/ //  _// _ |\ \/ /
+ *  \  // _/ /    /_/ / / __ | \  /
+ *  /_//___//_/|_//___//_/ |_| /_/
+ *
+ * Yeniay Control Computer Firmware
+ *
+ * Copyright (C) 2022 Yeniay
+ *
+ * This program is free software: you
+ * can redistribute it and/or modify it
+ * under the terms of the GNU General
+ * Public License as published by the
+ * Free Software Foundation, in version 3.
+ *
+ * You should have received a copy of
+ * the GNU General Public License along
+ * with this program. If not, see
+ * <http://www.gnu.org/licenses/>.
+ */
+
 #include <stdint.h>
-//#include <string.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 using namespace std;
 
-
 #include "ntrp_router.h"
 
 #define SERIAL_TIMEOUT_MS    100
-
-
 
 
 NTRP_Router::NTRP_Router(SERIAL_DEF* serial_port_x, RADIO_DEF* radio){
@@ -75,10 +93,9 @@ void NTRP_Router::task(void){
 /* Transmit the NTRP_Message_t to MASTER COMPUTER */
 void NTRP_Router::transmitMaster(const NTRP_Message_t* msg){
     if(!_ready)return;
-    uint8_t* raw_sentence = (uint8_t*)malloc((msg->packetsize+5));
-    NTRP_Unite(raw_sentence, msg);
-    serial_port->write(raw_sentence,msg->packetsize+5);
-    free(raw_sentence);
+    if(NTRP_Unite(_txBuffer, msg)){
+        serial_port->write(_txBuffer,msg->packetsize+5);
+    }
 }
 
 /* Receive the NTRP_Message_t from MASTER COMPUTER */
@@ -86,16 +103,16 @@ uint8_t NTRP_Router::receiveMaster(NTRP_Message_t* msg){
     if(!_ready)return 0;
     if(!serial_port->available())return 0;
     _buffer[0] = serial_port->read();
-    if(_buffer[0]!=NTRP_STARTBYTE)return 0;
+
+    if(_buffer[0]!=NTRP_STARTBYTE)return 0; /*Not starting with start byte*/
 
     _timer = 0;
     while((serial_port->available()<3) && (_timer<SERIAL_TIMEOUT_MS)){
         _timeout_tick(1);}
 
-    for (uint8_t i = 0; i < 3; i++)
-    {
-        _buffer[i+1] = serial_port->read();
-    }
+    for (uint8_t i = 0; i < 3; i++){_buffer[i+1] = serial_port->read();}
+
+    if(_buffer[1]!=NTRP_MASTER_ID)return 0;/*Receive master needed to has MASTER ID*/
     uint8_t packetsize = _buffer[3];
 
     _timer = 0;
@@ -103,13 +120,10 @@ uint8_t NTRP_Router::receiveMaster(NTRP_Message_t* msg){
         _timeout_tick(1);}
 
     for (uint8_t i = 0; i < packetsize+1; i++)
-    {
-        _buffer[i+4] = serial_port->read();
-    }
+    {_buffer[i+4] = serial_port->read();}
 
     return NTRP_Parse(msg,_buffer);
 }
-
 
 /* Transmit the NTRP_Message_t to TARGET NRF PIPE */
 uint8_t NTRP_Router::transmitPipe( uint8_t pipeid, const NTRP_Packet_t* packet,uint8_t size){
@@ -181,7 +195,7 @@ switch (msg->receiverID)
     case NTRP_ROUTER_ID:routerCOM(&msg->packet,msg->packetsize);break;  /* ReceiverID Router */
     default:{
         if(!transmitPipe(msg->receiverID,&msg->packet,msg->packetsize)){ /* Search NRF pipes for Receiver Hit*/
-            debug("NRF Pipe not found :" + msg->receiverID);
+            debug("Pipe not found :" + msg->receiverID);
         }
         break;
     }     
@@ -190,10 +204,6 @@ switch (msg->receiverID)
 
 /* Router Handler : Router Commands */
 void NTRP_Router::routerCOM(NTRP_Packet_t* cmd, uint8_t size){
-
-    char head[] = "Header =     ";
-    sprintf(&head[9],"%d",(int)cmd->header);
-    debug(head);
 
     /*SWITCH TO ROUTER COMMAND*/
 switch (cmd->header)
@@ -243,7 +253,6 @@ uint8_t NTRP_Router::openPipe(NTRP_Pipe_t cmd){
 void NTRP_Router::closePipe(char id){
     /*Not Implemented*/
 }
-
 
 void NTRP_Router::_timeout_tick(uint16_t tick){
     _timer+=tick;

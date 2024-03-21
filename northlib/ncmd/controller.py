@@ -11,17 +11,17 @@
 import threading
 import pygame
 import time
-import northlib.ntrp
-from northlib.ntrp.northradio import NorthRadio
 from northlib.ntrp.northpipe import NorthPipe
 
 __author__ = 'Yeniay RD'
 __all__ = ['Controller']
 
 class Controller():
-    """ Joystick Controller Class """
+    """ 
+    NTRP Joystick Controller 
+    """
     
-    def __init__(self,pipe=NorthPipe):
+    def __init__(self,pipe):
 
         self.pipe = pipe
         pygame.init()
@@ -33,29 +33,20 @@ class Controller():
             self.joystick = pygame.joystick.Joystick(0)  # First Founded JOYSTICK 
             self.joystick.init()
             self.isAlive = True
-            self.controlThread = threading.Thread(target=self.controlProcess,daemon=False)
-            self.controlThread.start()
-            
-        else: print("Controller Not Found.")
+            self.ctrlThread = threading.Thread(target=self.ctrlProcess,daemon=False)
+            self.ctrlThread.start()
 
-    def controlSwitch(self, mode = False):
-        pass
-        #Set UAV Mode to CONTROLLER
-        #Wait ACK Message withtimeout
+        else: print("NPX:/> Joystick Not Found.")
 
-    def controlProcess(self):
-        ch_arr = bytearray(4)
+    def ctrlProcess(self):
         while self.isAlive:
             pygame.event.pump()  # Only Joystick process
             for i in range(4):
                 self.axis[i] = (int)(((self.joystick.get_axis(i)+1)*255)/2)
-                ch_arr = bytearray(self.axis)
-                self.pipe.transmitCMD(ch_arr)
-                time.sleep(0.03)
 
-            print(self.axis)
-            #self.pipe.transmitCMD(self.axis)
-            #time.sleep(0.4)
-            
+            #print(self.axis)
+            self.pipe.txCMD(bytearray(self.axis))
+            time.sleep(0.01)
+       
     def destroy(self):
         self.isAlive = False
