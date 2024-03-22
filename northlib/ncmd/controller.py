@@ -43,7 +43,7 @@ class Controller():
                 for i in range(4):
                     self.axis[i] = (int)(((self.joystick.get_axis(i)+1)*255)/2)
             
-            print(self.axis)
+            #print(self.axis)
 
     def getAxis(self):
         return bytearray(self.axis)

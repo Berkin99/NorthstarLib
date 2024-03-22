@@ -76,7 +76,6 @@ class NorthPort():
     def destroy(self):
         self.mode = self.NO_CONNECTION
         if self.port != None:
-            print(self.port.out_waiting)
             self.port.reset_output_buffer()
             self.port.close()
             self.port = None

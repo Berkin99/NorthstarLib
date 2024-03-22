@@ -18,38 +18,33 @@ class NTX main
 
 if __name__ == '__main__':
 
-    radioManager.radioSearch(baud=8000000) #Arduino DUE Baudrate
+    radioManager.radioSearch(baud=2000000) #Arduino DUE (USB Connection) has no Baudrate
     if not len(radioManager.availableRadios) > 0: sys.exit()
-    radio = radioManager.getRadio(0)
-    radio.beginRadio()
+    
     time.sleep(1)
-
-    rf_pipe = NorthNRF(0,0,address="E7E7E7E300") 
+    
+    rf_pipe = NorthNRF(0,0,address="E7E7E7E301") 
     print("RF Radio ID = " + str(ord(rf_pipe.id)))
     
+    
     #rf_pipe.txFULLTX(); #ONLY TRANSMIT MODE
-    #ctrl = ncmd.Controller()
+    ctrl = ncmd.Controller()
 
-    timer = 0
-    while timer<1:
-        #rf_pipe.radio.txHandler(ntrp.NTRPPacket('MSG'),'E',force=True)
-        #rf_pipe.txMSG("Test Message")
-        #time.sleep(0.01)        
-        # rf_pipe.txCMD(ctrl.getAxis())
-        rf_pipe.txCMD([0,0,0,0])
+    timer = 0.0
+    while timer<20000:
+        #rf_pipe.radio.txHandler(ntrp.NTRPPacket('MSG'),'E',force=False)
+        rf_pipe.txMSG("Test Message")
+        #time.sleep(0.001)        
+        rf_pipe.txCMD(ctrl.getAxis())
+        #rf_pipe.txCMD([31,0,32,0])
         #if(rf_pipe.rxbuffer.isAvailable()):
-        #    ntrp.NTRP_LogMessage(rf_pipe.rxbuffer.read())   
-        
-        timer+=0.004
-        print(timer)
+        #ntrp.NTRP_LogMessage(rf_pipe.rxbuffer.read())   
+        timer+=0.001
+        #print("{:.3f}".format(timer))
 
     #rf_pipe.radio.txHandler(ntrp.NTRPPacket('MSG'),'E')
 
     print("END")
-    rf_pipe.radio.destroy()
-    while 1:
-        pass
-
-    #ctrl.destroy()
+    ctrl.destroy()
     radioManager.closeAvailableRadios()
     sys.exit()

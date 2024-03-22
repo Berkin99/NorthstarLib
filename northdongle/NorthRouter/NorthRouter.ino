@@ -1,33 +1,42 @@
 #include <Arduino.h>
 #include <SPI.h>
 #include "RF24.h"
-
 #include "ntrp.h"
 #include "ntrp_router.h"
 
+
+/*Arduino Uno
+#define LEDPIN 13
 RF24 rfmodule(8,9);
+NTRP_Router router(&Serial,&rfmodule);
+*/
+
+/*Arduino Due*/
+#define LEDPIN 14
+RF24 rfmodule(A8,A9);
 NTRP_Router router(&SerialUSB,&rfmodule);
 
-NTRP_Packet_t testpacket;
-NTRP_Pipe_t pipe = {'1',0,0,'00001'};
-
 void setup() {
+  pinMode(LEDPIN, OUTPUT);
+  SerialUSB.begin(ROUTER_BAUD);
 
-  //Serial.begin(115200);
-  SerialUSB.begin(2000000);
-
-  if(!rfmodule.begin())while(1);
-  if(!router.sync()) while(1);
+  /* Halt if NRF Module does not begin*/
+  if(!rfmodule.begin()) while(1);
+  rfmodule.setDataRate(RF24_2MBPS);
+  while(!router.sync(10)); 
 
   delay(100);
-  router.debug("NTRP Router Start v.5");
-  //router.openPipe(pipe);
+  router.debug("NTRP Router Start v.7");
 }
 
-uint32_t loop_timer = 0;
-
-char test[32];
+uint32_t counter = 0;
+bool ledvalue = HIGH;
 
 void loop() {
   router.task();
+  counter++;
+  if(counter%1000 == 0){
+    digitalWrite(LEDPIN, ledvalue);
+    ledvalue = !ledvalue;
+  }
 }

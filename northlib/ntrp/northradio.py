@@ -36,42 +36,45 @@ class NorthRadio(NorthPort):
 
     DEFAULT_BAUD = 115200
    
-    WAIT_TICK     = 0.001     #1 ms  Wait Tick
-    TRANSMIT_HALT = 0.001     #1 ms Transmit Stop
+    WAIT_TICK     = 0.001     #1 ms  Wait Tick (Do not Change)
+    TRANSMIT_HALT = 0.001     #1 ms Transmit Stop (Can changable)
      
     def __init__(self, com=None , baud=DEFAULT_BAUD):
         super().__init__(com, baud)
         self.isSync = False
-        self.pipes = []
-        self.radioid = ntrp.NTRP_MASTER_ID
+        self.pipes = []                     #NorthPipe Class List
+        self.radioid = ntrp.NTRP_MASTER_ID  
         self.txQueue = queue.Queue(5)
+        self.isActive = False
 
     def syncRadio(self,timeout = 2):
         timer = 0.0
         msg = ""
         while self.isSync == False and timer<timeout:
             temp = self.receive()
-            if temp == None : continue
+            if temp == None :
+                timer+=self.WAIT_TICK
+                time.sleep(self.WAIT_TICK) 
+                continue
             msg += temp.decode(errors='ignore')
 
             if ntrp.NTRP_SYNC_DATA in msg:
                 self.isSync = True
                 self.transmit(ntrp.NTRP_PAIR_DATA.encode())
-                time.sleep(0.01)      #Wait remaining data
+                time.sleep(0.1)       #Wait remaining data
                 self.port.read_all()  #Clear the buffer
                 return True
-
         return False
     
     def beginRadio(self):
-        if self.mode == self.READY:
-            self.isActive = True
-            self.txThread = threading.Thread(target=self.txProcess,daemon=False)
-            self.txThread.start()
-            self.rxThread = threading.Thread(target=self.rxProcess,daemon=False)
-            self.rxThread.start()
-            return True
-        return False 
+        if self.isActive == True: return False              #Return if already begin
+        if self.mode == self.NO_CONNECTION : return False   #Return if port has no connection
+        self.isActive = True  #First set isActive to <True> so threats can go into while loop
+        self.txThread = threading.Thread(target=self.txProcess,daemon=True)
+        self.txThread.start()
+        self.rxThread = threading.Thread(target=self.rxProcess,daemon=True)
+        self.rxThread.start()
+        return True 
 
     def subPipe(self,pipe):
         self.pipes.append(pipe)     #Subscribe to the pipes
@@ -95,13 +98,18 @@ class NorthRadio(NorthPort):
         """ <DEBUG INCOMING MSG>
         ntrp.NTRP_LogMessage(msg)
         """
-
         if(msg.header == ntrp.NTRPHeader_e.MSG):
-            print(str(time.time()*1000)[10:] + " " + self.com + ":/"+msg.talker+"> " + msg.data.decode('ascii',errors='ignore'))
+            print(self.com + ":/"+msg.talker+"> " + msg.data.decode('ascii',errors='ignore'))
+        elif msg.header == ntrp.NTRPHeader_e.NAK:
+            ntrp.NTRP_LogMessage(msg)
 
-        #Find related pipe
-        for pipe in self.pipes:
-            if pipe.id == msg.talker: pipe.append(msg)
+        for pipe in self.pipes: #Find related pipe
+            if pipe.id == msg.talker: 
+                pipe.append(msg)
+                return
+            
+        if msg.talker == 'E': return #Talker is router
+        print(self.com + ":/"+msg.talker+"> " + "Talker not recognized.")
     
     def rxProcess(self):
         #If connection lost, Rx process ends.
@@ -144,6 +152,7 @@ class NorthRadio(NorthPort):
 
     def txHandler(self,pck=ntrp.NTRPPacket, receiverid='0', force=False):
         if(self.mode == self.NO_CONNECTION): return
+        
         msg = ntrp.NTRPMessage(self.radioid,receiverid)
         msg.packetsize = len(pck.data)+2
 
@@ -160,21 +169,21 @@ class NorthRadio(NorthPort):
         ntrp.NTRP_LogMessage(msg)
         print(ntrp.NTRP_bytes(arr))
         """
-        if force==True:
-            if self.mode != self.NO_CONNECTION:
-                self.port.write(arr)
+        if force==True: 
+            self.port.write(arr)
         else:    
             self.txQueue.put(block=True,item=arr)
-            time.sleep(self.TRANSMIT_HALT)
+            time.sleep(self.TRANSMIT_HALT) 
         
     def txProcess(self):
         while self.isActive and self.mode != self.NO_CONNECTION:
             arr = self.txQueue.get()
             if arr != None:
                 self.transmit(arr)
-                #time.sleep(self.TRANSMIT_HALT) #Transmit can't speed up to infinity in UNO
+                time.sleep(self.TRANSMIT_HALT) #Transmit can't speed up to infinity
                 self.txQueue.task_done()
 
     def destroy(self):
         self.isActive = False
+        self.mode = self.NO_CONNECTION
         return super().destroy()

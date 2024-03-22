@@ -39,7 +39,8 @@ class NorthPipe():
         # RF DONGLE >
         # Agent ID is represents the rf adress when use NTRP_Router Dongle
         # Agent ID identifies the target agent when use UART Lora Module
-        self.radio = radio            
+        
+        self.radio = radio    
         self.radio.subPipe(pipe=self)  #Subscribe to Radio
 
         self.rxbuffer = NTRPBuffer(20) #LIFO Ring Buffer
@@ -68,8 +69,8 @@ class NorthPipe():
 
     def transmitPacket(self,txPacket = ntrp.NTRPPacket,force=False):
         #Packet with receiver ID = PIPE ID
-        self.radio.txHandler(txPacket,self.id,force)     
-
+        self.radio.txHandler(txPacket,self.id,force)    
+          
     def txNAK(self):
         self.txpck = ntrp.NTRPPacket('NAK')
         self.transmitPacket(self.txpck)     
@@ -99,7 +100,7 @@ class NorthPipe():
         self.txpck = ntrp.NTRPPacket('CMD')
         self.txpck.dataID = 0
         self.txpck.data = channels   
-        self.transmitPacket(self.txpck,force=True)
+        self.transmitPacket(self.txpck)
         
 class NorthNRF(NorthPipe):
         

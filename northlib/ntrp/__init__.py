@@ -35,8 +35,12 @@ def radioSearch(baud=115200):
             nr = NorthRadio(com,baud)
             if nr.syncRadio(2):
                 print('RadioManager:/> NTRP Radio found : '+ com + " " + str(baud))
+                nr.beginRadio()
                 availableRadios.append(nr)
-            else: nr.destroy()
+                
+            else:
+                print("RadioManager:/> Can't connect to : " + com) 
+                nr.destroy()
         except: serial.SerialException
         
 def closeAvailableRadios():
@@ -46,7 +50,7 @@ def closeAvailableRadios():
     availableRadios.clear()
 
 def getRadio(index=int)->NorthRadio:
-    if index+1<len(availableRadios): return None
+    if index>=len(availableRadios) or index < 0: raise ValueError
     return availableRadios[index]
 
 def getAvailableRadios():
