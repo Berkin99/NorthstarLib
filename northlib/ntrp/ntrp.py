@@ -70,6 +70,11 @@ class NTRPMessage(NTRPPacket):
         self.talker      = talker           #char
         self.receiver    = receiver         #char
         self.packetsize  = 3                #int
+    
+    def setPacket(self,packet=NTRPPacket):
+        self.header = packet.header
+        self.dataID = packet.setDataID
+        self.data   = packet.data
         
 # @param raw_bytearray = bytearray
 # if error : returns None 

@@ -99,7 +99,7 @@ class NorthPipe():
         self.txpck = ntrp.NTRPPacket('CMD')
         self.txpck.dataID = 0
         self.txpck.data = channels   
-        self.transmitPacket(self.txpck,force=False)
+        self.transmitPacket(self.txpck,force=True)
         
 class NorthNRF(NorthPipe):
         

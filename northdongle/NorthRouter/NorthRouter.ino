@@ -14,7 +14,7 @@ NTRP_Pipe_t pipe = {'1',0,0,'00001'};
 void setup() {
 
   //Serial.begin(115200);
-  SerialUSB.begin(115200);
+  SerialUSB.begin(2000000);
 
   if(!rfmodule.begin())while(1);
   if(!router.sync()) while(1);
@@ -25,6 +25,8 @@ void setup() {
 }
 
 uint32_t loop_timer = 0;
+
+char test[32];
 
 void loop() {
   router.task();

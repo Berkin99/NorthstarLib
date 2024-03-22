@@ -15,9 +15,7 @@ import time
 __author__ = 'Yeniay RD'
 __all__ = ['NorthPort']
 
-baudrate_e = (0,9600,19200,38400,57600,115200)
-
-class NorthPort(): # NORTH PORT SERIAL COM
+class NorthPort(): 
     """
     NTRP Serial Com Port
     Handles the serial com object.
@@ -31,15 +29,15 @@ class NorthPort(): # NORTH PORT SERIAL COM
     def __init__(self, com=None, baudrate=AUTOBAUDRATE):
         self.mode = self.NO_CONNECTION
         self.baudrate = None
-        self.com = None
-        self.port = None
+        self.com      = None
+        self.port     = None
         self.setSerial(com,baudrate)
 
     def setSerial(self,com=None,baudrate=AUTOBAUDRATE):
         
         if self.port != None:
-            self.mode = self.NO_CONNECTION #No Connection info for Rx Thread
-            self.port.close() #Need to close current active port for open new one 
+            self.mode = self.NO_CONNECTION  #No Connection info for Rx Thread
+            self.port.close()               #Need to close current active port for open new one 
         
         self.com = com
         self.baudrate = baudrate
@@ -52,52 +50,34 @@ class NorthPort(): # NORTH PORT SERIAL COM
     def errorSerial(self):
             self.mode = self.NO_CONNECTION
             self.port = None 
-            print(self.com + ": No Connection")
+            print(self.com + " PORT : NO CONNECTION")
 
     def getAvailablePorts():
         return [port.device for port in serial.tools.list_ports.comports()]
 
     def receive(self):
         if self.mode == self.NO_CONNECTION: return None
-        self.mode = self.BUSY
         try:
-            if not (self.port.in_waiting > 0):
-                self.mode = self.READY 
-                return None         
+            if not (self.port.in_waiting > 0): return None         
             msg = self.port.read(1) 
-            self.mode = self.READY
             return msg
         except serial.SerialException as error:
-            self.errorSerial()
-            return
-
-    def receiveLine(self):
-        if self.mode == self.NO_CONNECTION: return
-        self.mode = self.BUSY
-        try:
-            if not (self.port.in_waiting > 0):
-                self.mode = self.READY 
-                return None                              
-            msg = self.port.readline()                    
-            self.mode = self.READY
-            return msg
-        except serial.SerialException:
             self.errorSerial()
             return
         
     def transmit(self,byt):
         if self.mode == self.NO_CONNECTION: return
-        self.mode = self.BUSY
         if byt!= None:
             try:
                 self.port.write(byt)
             except serial.SerialException:
                 self.errorSerial()
-        self.mode = self.READY
             
     def destroy(self):
         self.mode = self.NO_CONNECTION
         if self.port != None:
+            print(self.port.out_waiting)
+            self.port.reset_output_buffer()
             self.port.close()
-
+            self.port = None
 

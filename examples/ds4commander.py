@@ -10,6 +10,7 @@ def printer():
     while True:
         arg = q.get(block=True)  # Kuyruktan bir öğe al
         print(arg)
+        time.sleep(0.05)
         q.task_done()  # İşlem tamamlandı olarak işaretle
 
 def func1():

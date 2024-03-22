@@ -23,7 +23,7 @@ import time
 
 availableRadios = []
 
-def radioSearch():
+def radioSearch(baud=115200):
     #Radio Search closes all radios in the list
     closeAvailableRadios()
     coms = NorthPort.getAvailablePorts()
@@ -32,9 +32,9 @@ def radioSearch():
     for com in coms:
         nr = None
         try:
-            nr = NorthRadio(com)
+            nr = NorthRadio(com,baud)
             if nr.syncRadio(2):
-                print('RadioManager:/> NTRP Radio found : '+ com)
+                print('RadioManager:/> NTRP Radio found : '+ com + " " + str(baud))
                 availableRadios.append(nr)
             else: nr.destroy()
         except: serial.SerialException

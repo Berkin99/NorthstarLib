@@ -11,7 +11,6 @@
 import threading
 import pygame
 import time
-from northlib.ntrp.northpipe import NorthPipe
 
 __author__ = 'Yeniay RD'
 __all__ = ['Controller']
@@ -21,9 +20,8 @@ class Controller():
     NTRP Joystick Controller 
     """
     
-    def __init__(self,pipe=NorthPipe):
+    def __init__(self):
 
-        self.pipe = pipe
         pygame.init()
         pygame.joystick.init()
         self.isAlive = False
@@ -46,7 +44,9 @@ class Controller():
                     self.axis[i] = (int)(((self.joystick.get_axis(i)+1)*255)/2)
             
             print(self.axis)
-            self.pipe.txCMD(bytearray(self.axis))
-       
+
+    def getAxis(self):
+        return bytearray(self.axis)
+
     def destroy(self):
         self.isAlive = False

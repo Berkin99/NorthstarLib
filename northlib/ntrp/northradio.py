@@ -35,10 +35,9 @@ class NorthRadio(NorthPort):
     """
 
     DEFAULT_BAUD = 115200
-    
+   
     WAIT_TICK     = 0.001     #1 ms  Wait Tick
-    TRANSMIT_HALT = 0.0005    #500 us Transmit Stop
-    #Want to keep transmit speed same as the baudrate & dongle process speed
+    TRANSMIT_HALT = 0.001     #1 ms Transmit Stop
      
     def __init__(self, com=None , baud=DEFAULT_BAUD):
         super().__init__(com, baud)
@@ -52,13 +51,8 @@ class NorthRadio(NorthPort):
         msg = ""
         while self.isSync == False and timer<timeout:
             temp = self.receive()
-            if temp == None :
-                timer +=   self.WAIT_TICK
-                time.sleep(self.WAIT_TICK) 
-                continue
-            
-            try: msg += temp.decode()
-            except: UnicodeError
+            if temp == None : continue
+            msg += temp.decode(errors='ignore')
 
             if ntrp.NTRP_SYNC_DATA in msg:
                 self.isSync = True
@@ -150,14 +144,13 @@ class NorthRadio(NorthPort):
 
     def txHandler(self,pck=ntrp.NTRPPacket, receiverid='0', force=False):
         if(self.mode == self.NO_CONNECTION): return
-        msg = ntrp.NTRPMessage()
-        msg.talker = self.radioid
-        msg.receiver = receiverid
+        msg = ntrp.NTRPMessage(self.radioid,receiverid)
         msg.packetsize = len(pck.data)+2
 
         msg.header = pck.header
         msg.dataID = pck.dataID
         msg.data   = pck.data
+
         arr = ntrp.NTRP_Unite(msg)
         if arr == None :
             print(self.com+":/>" + " Packet Lost" ) 
@@ -168,7 +161,8 @@ class NorthRadio(NorthPort):
         print(ntrp.NTRP_bytes(arr))
         """
         if force==True:
-            self.transmit(arr)
+            if self.mode != self.NO_CONNECTION:
+                self.port.write(arr)
         else:    
             self.txQueue.put(block=True,item=arr)
             time.sleep(self.TRANSMIT_HALT)
@@ -178,7 +172,7 @@ class NorthRadio(NorthPort):
             arr = self.txQueue.get()
             if arr != None:
                 self.transmit(arr)
-                time.sleep(self.TRANSMIT_HALT) #Transmit can't speed up to infinity
+                #time.sleep(self.TRANSMIT_HALT) #Transmit can't speed up to infinity in UNO
                 self.txQueue.task_done()
 
     def destroy(self):
