@@ -124,8 +124,6 @@ class NorthNRF(NorthPipe):
         self.bandwidth = bandwidth              #int[0,1,2]
         self.setAddress(address)
 
-        self.isActive = True
-
         #If Use NRF Router module, Agents has nrf address instead of ID
         #ID needs to be defined to identify the pipe, so get new tag from radio
         self.id = self.radio.newPipeID() #Unique ID Request
@@ -169,5 +167,4 @@ class NorthNRF(NorthPipe):
     def destroy(self):
         self.txCLOSEPIPE()  
         self.radio.unsubPipe(self.id)
-        self.isActive = False
 

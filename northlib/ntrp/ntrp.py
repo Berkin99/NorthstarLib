@@ -116,8 +116,9 @@ def NTRP_Unite(message=NTRPMessage):
     arr.append(ord(NTRP_STARTBYTE))
     arr.append(ord(message.talker))
     arr.append(ord(message.receiver))
-    message.packetsize = len(message.data)+2
-    arr.append(message.packetsize)
+    
+    if len(message.data)+2>NTRP_MAX_PACKET_SIZE: return None
+    arr.append(len(message.data)+2)
     
     #NTRP_Packet_t
     arr.append(message.header.value)

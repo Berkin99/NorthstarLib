@@ -21,29 +21,32 @@ class Controller():
     """
     
     def __init__(self):
-
-        pygame.init()
-        pygame.joystick.init()
         self.isAlive = False
         self.axis = [0,0,0,0]
-
+        pygame.init()
+        pygame.joystick.init()
+        if not self.findController(): 
+            print("NPX:/> Joystick Not Found.")
+    
+    def findController(self):
         if pygame.joystick.get_count() > 0:
-            self.joystick = pygame.joystick.Joystick(0)  # First Founded JOYSTICK 
-            self.joystick.init()
-            self.isAlive = True
-            self.ctrlThread = threading.Thread(target=self.ctrlProcess,daemon=False)
-            self.ctrlThread.start()
-
-        else: print("NPX:/> Joystick Not Found.")
-
+                self.joystick = pygame.joystick.Joystick(0)  # First Founded JOYSTICK 
+                self.joystick.init()
+                self.ctrlThread = threading.Thread(target=self.ctrlProcess,daemon=False)
+                self.ctrlThread.start()
+                return True
+        else:
+            return False 
+        
     def ctrlProcess(self):
+        self.isAlive = True
         while self.isAlive:
-            #pygame.event.pump()  # Only Joystick process
             for event in pygame.event.get(pygame.JOYAXISMOTION):
                 for i in range(4):
                     self.axis[i] = (int)(((self.joystick.get_axis(i)+1)*255)/2)
             
             #print(self.axis)
+        print("NPX:/> CTRL Process end.")
 
     def getAxis(self):
         return bytearray(self.axis)

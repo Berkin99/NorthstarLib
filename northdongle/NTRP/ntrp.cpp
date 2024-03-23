@@ -23,6 +23,23 @@
 #include <stdint.h>
 #include "ntrp.h"
 
+
+void NTRP_InitMessage(NTRP_Message_t* message){
+	message->talkerID = 0;
+	message->receiverID = 0;
+	message->packetsize = 0;
+	NTRP_InitPacket(&message->packet);
+}
+
+void NTRP_InitPacket(NTRP_Packet_t* packet){
+	packet->header = 0;
+	packet->dataID = 0;
+	for(uint8_t i = 0; i<26;i++){
+		packet->data.bytes[i] = 0;
+	}
+}
+
+
 /** raw_sentence to -> NTRP_Message_t
 *   OUT ? parsed : parse error
 */

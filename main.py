@@ -27,24 +27,18 @@ if __name__ == '__main__':
     print("RF Radio ID = " + str(ord(rf_pipe.id)))
     
     
-    #rf_pipe.txFULLTX(); #ONLY TRANSMIT MODE
-    ctrl = ncmd.Controller()
-
     timer = 0.0
-    while timer<20000:
+    while timer<2000:
         #rf_pipe.radio.txHandler(ntrp.NTRPPacket('MSG'),'E',force=False)
-        rf_pipe.txMSG("Test Message")
+        #rf_pipe.txMSG("Test Message")
         #time.sleep(0.001)        
-        rf_pipe.txCMD(ctrl.getAxis())
-        #rf_pipe.txCMD([31,0,32,0])
-        #if(rf_pipe.rxbuffer.isAvailable()):
-        #ntrp.NTRP_LogMessage(rf_pipe.rxbuffer.read())   
+        #rf_pipe.txCMD(ctrl.getAxis())
+        rf_pipe.txCMD([31,0,32,0])
+        if(rf_pipe.rxbuffer.isAvailable()):
+            ntrp.NTRP_LogMessage(rf_pipe.rxbuffer.read())   
         timer+=0.001
         #print("{:.3f}".format(timer))
 
-    #rf_pipe.radio.txHandler(ntrp.NTRPPacket('MSG'),'E')
-
-    print("END")
-    ctrl.destroy()
+    print("app exit")
     radioManager.closeAvailableRadios()
     sys.exit()

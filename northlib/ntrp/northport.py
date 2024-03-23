@@ -51,6 +51,7 @@ class NorthPort():
             self.mode = self.NO_CONNECTION
             self.port = None 
             print(self.com + " PORT : NO CONNECTION")
+            self.destroy()
 
     def getAvailablePorts():
         return [port.device for port in serial.tools.list_ports.comports()]

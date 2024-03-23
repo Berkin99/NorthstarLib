@@ -24,22 +24,22 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-using namespace std;
+//using namespace std;
 
 #include "ntrp_router.h"
 
-#define SERIAL_TIMEOUT_US    1000
+#define SERIAL_TIMEOUT_US    10000  /* 10 ms timeout */
 
 NTRP_Router::NTRP_Router(SERIAL_DEF* serial_port_x, RADIO_DEF* radio){
     serial_port = serial_port_x;
     nrf = radio;
-    nrf_pipe_index = 1; /*Nrf rx pipe index starts @1*/
-    nrf_last_transmit_index = -1;
+    nrf_pipe_index = 1;             /*Nrf rx pipe index starts @1*/
+    nrf_last_transmit_index = -1;   /**/
     _ready = false;
     mode = R_MODE_TRX;
 }
 
-uint8_t NTRP_Router::sync(uint16_t timeout){
+uint8_t NTRP_Router::sync(uint32_t timeout){
 
     char syncdata[] = "---";
     _timer_us = 0;
@@ -61,11 +61,14 @@ uint8_t NTRP_Router::sync(uint16_t timeout){
 }
 
 void NTRP_Router::task(void){
+    static NTRP_Message_t ntrp_message; /* Static -> do not need to allocate memmory repeatedly */
+    NTRP_InitMessage(&ntrp_message); /* Set all values to zero */
+
     /* Continously checks serial port for catch a success ntrp_message */
-    NTRP_Message_t ntrp_message;
     if(receiveMaster(&ntrp_message)){
         route(&ntrp_message);
     }
+
     /* Continously checks nrf buffer for catch a success ntrp_message */
     if(receivePipe(&ntrp_message)){
         route(&ntrp_message); 
@@ -74,16 +77,18 @@ void NTRP_Router::task(void){
 
 void NTRP_Router::debug(const char* msg){
     NTRP_Message_t temp;
+    NTRP_InitMessage(&temp);
+
     temp.talkerID = NTRP_ROUTER_ID;
     temp.receiverID = NTRP_MASTER_ID;
 
     uint8_t i = 0;
-    i=0;
     temp.packet.header = NTRP_MSG;
     while(i<=(NTRP_MAX_PACKET_SIZE-2) && msg[i]!=0x00){
         temp.packet.data.bytes[i] = msg[i];
         i++;    
     }
+    
     temp.packet.dataID = i;
     temp.packetsize = i+2;
     transmitMaster(&temp);
@@ -102,36 +107,37 @@ void NTRP_Router::transmitMaster(const NTRP_Message_t* msg){
 */
 uint8_t NTRP_Router::receiveMaster(NTRP_Message_t* msg){
     if(!serial_port->available())return 0;
-    _buffer[0] = serial_port->read();
+    _rxBuffer[0] = serial_port->read();
 
-    if(_buffer[0]!=NTRP_STARTBYTE)return 0; /*Not starting with start byte*/
+    if(_rxBuffer[0]!=NTRP_STARTBYTE)return 0; /*Not starting with start byte*/
 
     _timer_us = 0;
     while((serial_port->available()<3) && (_timer_us<SERIAL_TIMEOUT_US)){
         _timeout_tick(50);}
 
-    for (uint8_t i = 0; i < 3; i++){_buffer[i+1] = serial_port->read();}
+    for (uint8_t i = 0; i < 3; i++){_rxBuffer[i+1] = serial_port->read();}
 
-    if(_buffer[1]!=NTRP_MASTER_ID)return 0; /* talker ID should be MASTER ID */
-    uint8_t packetsize = _buffer[3];
-    if(_buffer[3]>NTRP_MAX_PACKET_SIZE)return 0; /* Max Packet size error */
+    if(_rxBuffer[1]!=NTRP_MASTER_ID)return 0; /* talker ID should be MASTER ID */
+    uint8_t packetsize = _rxBuffer[3];
+    if(_rxBuffer[3]>NTRP_MAX_PACKET_SIZE)return 0; /* Max Packet size error */
 
     _timer_us = 0;
     while((serial_port->available()<packetsize+1) && (_timer_us<SERIAL_TIMEOUT_US)){
         _timeout_tick(50);}
 
     for (uint8_t i = 0; i < packetsize+1; i++)
-    {_buffer[i+4] = serial_port->read(); /*_buffer[4] is start of the NTRP_Packet*/
+    {_rxBuffer[i+4] = serial_port->read(); /*_rxBuffer[4] is start of the NTRP_Packet*/
     }
 
-    return NTRP_Parse(msg , _buffer);
+    return NTRP_Parse(msg , _rxBuffer);
 }
 
 /* Transmit the NTRP_Message_t to TARGET NRF PIPE */
 uint8_t NTRP_Router::transmitPipe(uint8_t pipeid, const NTRP_Packet_t* packet,uint8_t size){
     if(mode==R_MODE_FULLRX) return 0;
     if (pipeid==0) return 0; /*Pipe ID needs to be an ascii char*/
-    for (uint8_t i = 0; i < nrf_pipe_index; i++)
+    
+    for (uint8_t i = 1; i < nrf_pipe_index; i++) /* Pipe index start @1 */
     {
         if(nrf_pipe[i].id != pipeid) continue;
         
@@ -180,8 +186,8 @@ uint8_t NTRP_Router::receivePipe(NTRP_Message_t* msg){
 
     uint8_t pipe = 0;
     if(nrf->available(&pipe)){
-        nrf->read(_buffer,NTRP_MAX_MSG_SIZE);
-        NTRP_PackParse(&msg->packet,_buffer);
+        nrf->read(_rxBuffer,NTRP_MAX_MSG_SIZE);
+        NTRP_PackParse(&msg->packet,_rxBuffer);
 
         msg->receiverID = NTRP_MASTER_ID;
         msg->talkerID = nrf_pipe[pipe].id;
@@ -256,7 +262,7 @@ void NTRP_Router::routerCOM(NTRP_Packet_t* cmd, uint8_t size){
     break;
     default:
     break;
-}
+    }   
 }
 
 uint8_t NTRP_Router::openPipe(NTRP_Pipe_t cmd){    
@@ -265,14 +271,18 @@ uint8_t NTRP_Router::openPipe(NTRP_Pipe_t cmd){
     //TODO: nrf->setChannel(cmd.channel);
     //TODO: nrf->setSpeed(speeds[cmd.speedbyte])
 
+    /*nrf_pipe_index starts @1*/
+
     /*READ MINUS WRITE*/
     /********do not edit*******/
     nrf->openReadingPipe(nrf_pipe_index, cmd.address);
-    cmd.address[5]-=1;       
+    cmd.address[5]-=1; /* RX = ...01 , TX = ...00 */ 
+    /*transmitPipe() opens the writing pipe*/     
     nrf->startListening();
     /********do not edit*******/
+
     nrf_pipe[nrf_pipe_index] = cmd; /*Pipe index is need to be same with nrf rx pipe index*/
-    nrf_pipe_index++;     
+    nrf_pipe_index++; /*Incremented for next openpipe & reptresenting the pipe size */   
     return 1;
 }
 
@@ -281,7 +291,7 @@ void NTRP_Router::closePipe(char id){
 }
 
 /*Delay microseconds and add to timer*/
-void NTRP_Router::_timeout_tick(uint16_t tick_us){
+void NTRP_Router::_timeout_tick(uint32_t tick_us){
     _timer_us+=tick_us;
     delayMicroseconds(tick_us);
 }

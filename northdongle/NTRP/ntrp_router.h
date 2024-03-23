@@ -31,18 +31,18 @@
 #include "RF24.h"
 
 #ifdef SAM3_SERIES
-#define SERIAL_DEF          Serial_ //HardwareSerial //UARTClass /*Serial Com Object*/
+#define SERIAL_DEF          Serial_
 #define ROUTER_BAUD         2000000
 #else
 #define SERIAL_DEF          HardwareSerial //UARTClass /*Serial Com Object*/
 #define ROUTER_BAUD         115200
 #endif
 
-#define RADIO_DEF           RF24                       /*NRF Object*/ 
+#define RADIO_DEF           RF24 /*NRF Object*/ 
 
 #define NTRP_DEFAULT_BAUD   115200
 #define NTRP_RX_NRF         0xE7E7E7E900LL
-#define NRF_MAX_PIPE_SIZE   5
+#define NRF_MAX_PIPE_SIZE   6
 
 typedef enum{
   R_OPENPIPE    = 21,
@@ -74,21 +74,21 @@ class NTRP_Router{
     SERIAL_DEF* serial_port;
     RADIO_DEF* nrf;
 
-    NTRP_Pipe_t nrf_pipe[NRF_MAX_PIPE_SIZE];  /* 5 PIPE !!!! Do not use pipe 0 for multiceiver applications !!!! */
-    uint8_t nrf_pipe_index;                   /* Current PIPE Index */
-    int8_t  nrf_last_transmit_index;          /* Last Transmit Channel Index */
+    NTRP_Pipe_t nrf_pipe[NRF_MAX_PIPE_SIZE];  /* 5 PIPE. Do not use pipe 0 for multiceiver applications */
+    uint8_t nrf_pipe_index;                   /* Opened pipe size + 1 (Index 0 not used) */
+    int8_t  nrf_last_transmit_index;          /* Last Transmit Pipe Index */
     
     uint32_t _timer_us;
-    void _timeout_tick(uint16_t tick_us = 1);
+    void _timeout_tick(uint32_t tick_us = 1);
     
-    uint8_t _buffer[NTRP_MAX_MSG_SIZE];   /* Master RX buffer */
-    uint8_t _txBuffer[NTRP_MAX_MSG_SIZE]; /* Slave Transmit buffer */
+    uint8_t _rxBuffer[NTRP_MAX_MSG_SIZE];   /* Master RX buffer */
+    uint8_t _txBuffer[NTRP_MAX_MSG_SIZE];   /* Slave Transmit buffer */
 
     public:
     NTRP_Router(SERIAL_DEF* serial_port_x , RADIO_DEF* radio);
-    NTRP_RouterMode mode;
+    NTRP_RouterMode mode; /* RxTx , Rx, Tx modes. Default : RxTx */
 
-    uint8_t sync(uint16_t timeout = 60);
+    uint8_t sync(uint32_t timeout = 60);
     void task(void);
     void debug(const char* msg);
 
