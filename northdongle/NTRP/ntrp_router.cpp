@@ -150,7 +150,7 @@ uint8_t NTRP_Router::transmitPipe(uint8_t pipeid, const NTRP_Packet_t* packet,ui
         }    
         
         if(mode==R_MODE_FULLTX){
-            nrf->startWrite(_txBuffer,size,true);
+            nrf->write(_txBuffer,size,1);
             return 1;
         }
 
@@ -165,7 +165,7 @@ uint8_t NTRP_Router::transmitPipe(uint8_t pipeid, const NTRP_Packet_t* packet,ui
 void NTRP_Router::transmitPipeFast(uint8_t pipeid,const uint8_t* raw_sentence, uint8_t size){
     if(mode==R_MODE_FULLRX) return;
 
-    for (uint8_t i = 0; i < nrf_pipe_index; i++)
+    for (uint8_t i = 1; i < nrf_pipe_index; i++)
     {
         if(nrf_pipe[i].id != pipeid) continue;
             
@@ -176,7 +176,7 @@ void NTRP_Router::transmitPipeFast(uint8_t pipeid,const uint8_t* raw_sentence, u
             nrf_last_transmit_index = i;
         }
 
-        nrf->write(raw_sentence, size);       
+        nrf->write(raw_sentence, size, 1);       
         if(mode==R_MODE_TRX) nrf->startListening(); // Set to RX Mode again
     }
 }

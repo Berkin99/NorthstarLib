@@ -37,7 +37,7 @@ class NorthRadio(NorthPort):
     DEFAULT_BAUD = 115200
    
     WAIT_TICK     = 0.001     #1 ms  Wait Tick (Do not Change)
-    TRANSMIT_HALT = 0.005     #1 ms Transmit Stop (Can changable)
+    TRANSMIT_HALT = 0.001     #1 ms Transmit Stop (Can changable)
      
     def __init__(self, com=None , baud=DEFAULT_BAUD):
         super().__init__(com, baud)

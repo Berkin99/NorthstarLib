@@ -15,11 +15,14 @@ if __name__ == '__main__':
     ctrl = ncmd.Controller() #Joystick controller
     time.sleep(1)
     
+
     rf_pipe = NorthNRF(0,0,address="E7E7E7E301") 
     print("RF Radio ID = " + str(ord(rf_pipe.id)))
     
+    rf_pipe.txFULLTX()
+
     while 1: 
-        #if ctrl.isAlive == False : break
+        if ctrl.isAlive == False : break
         rf_pipe.txCMD(ctrl.getAxis())
         if not rf_pipe.radio.isRadioAlive(): break
 
