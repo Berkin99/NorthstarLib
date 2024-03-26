@@ -11,6 +11,7 @@
 import time 
 
 import northlib.ntrp.ntrp as ntrp
+from northlib.ntrp.ntrp import NTRPMessage,NTRPPacket,NTRPHeader_e
 from northlib.ntrp.ntrpbuffer import NTRPBuffer
 from northlib.ntrp.northradio import NorthRadio 
 import northlib.ntrp as nt
@@ -30,6 +31,8 @@ class NorthPipe():
     SELF -> UART LORA MODULE 
     NRF CLASS -> NRF ROUTER
     """
+    RX_HANDLE_MODE_BUFFER   = 0
+    RX_HANDLE_MODE_CALLBACK = 1
 
     def __init__(self, pipe_id = '1', radio = NorthRadio):
         self.id = pipe_id                    # Agent ID
@@ -44,17 +47,25 @@ class NorthPipe():
         self.radio.subPipe(pipe=self)  #Subscribe to Radio
 
         self.rxbuffer = NTRPBuffer(20) #LIFO Ring Buffer
-        self.newPacketCallBack = None
-        
-    def append(self,msg):
-        self.rxbuffer.append(msg)
-        if self.newPacketCallBack != None:
-            self.newPacketCallBack() 
+        self.rxHandleMode = self.RX_HANDLE_MODE_BUFFER
+        self.rxCallBack = None
 
+    def append(self,msg=NTRPMessage):
+
+        if self.rxHandleMode == self.RX_HANDLE_MODE_CALLBACK:
+            if self.rxCallBack == None: return
+            self.rxCallBack(msg) 
+        elif self.rxHandleMode == self.RX_HANDLE_MODE_BUFFER:
+            self.rxbuffer.append(msg)
+            
     def setCallBack(self, func):
         #Data Ready Callback function 
         #It blocks radio rxThread : keep it small 
-        self.newPacketCallBack = func
+        self.rxCallBack = func
+        self.rxHandleMode(self.RX_HANDLE_MODE_CALLBACK)
+
+    def setRxHandleMode(self,mode):
+        self.rxHandleMode = mode
 
     def waitConnection(self, timeout = 1):
         self.txMSG("ACK Request")
@@ -96,9 +107,9 @@ class NorthPipe():
         self.txpck.data = databytes   
         self.transmitPacket(self.txpck)
         
-    def txCMD(self,channels=bytearray):
+    def txCMD(self,dataID=0,channels=bytearray):
         self.txpck = ntrp.NTRPPacket('CMD')
-        self.txpck.dataID = 0
+        self.txpck.dataID = dataID
         self.txpck.data = channels   
         self.transmitPacket(self.txpck)
         

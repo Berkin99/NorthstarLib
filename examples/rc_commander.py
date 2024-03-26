@@ -23,7 +23,7 @@ if __name__ == '__main__':
 
     while 1: 
         if ctrl.isAlive == False : break
-        rf_pipe.txCMD(ctrl.getAxis())
+        rf_pipe.txCMD(channels=ctrl.getAxis())
         if not rf_pipe.radio.isRadioAlive(): break
 
     ctrl.destroy()

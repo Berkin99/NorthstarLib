@@ -8,7 +8,7 @@
 #   2024 Yeniay Uav Flight Control Systems
 #   Research and Development Team
 
-from northlib.ncmd.commander import Commander
+from northlib.ncmd.northcom import NorthCOM
 
 __author__ = 'Yeniay RD'
 __all__ = []

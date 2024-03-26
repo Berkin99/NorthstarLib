@@ -33,7 +33,7 @@ if __name__ == '__main__':
         #rf_pipe.txMSG("Test Message")
         #time.sleep(0.001)        
         #rf_pipe.txCMD(ctrl.getAxis())
-        rf_pipe.txCMD([31,0,32,0])
+        rf_pipe.txCMD(0,[31,0,32,0])
         if(rf_pipe.rxbuffer.isAvailable()):
             ntrp.NTRP_LogMessage(rf_pipe.rxbuffer.read())   
         timer+=0.001
