@@ -1,10 +1,14 @@
+import sys
+sys.path.append('./')
+
+import northlib.ncmd.nrx as nrx
 
 
+el = nrx.NRX_INT16
 
+tel = nrx.NrxType(el)
 
-
-uri="radio:/0/1/2/E7E7E7E301"
-
-parts = uri.split('/')
-
-print(int(parts[2])+14)
+print("vartype: ", tel.varType)
+print("varbytes:", tel.varBytes)
+print("readonly:", tel.readOnly)
+print("group:   ", tel.group)
