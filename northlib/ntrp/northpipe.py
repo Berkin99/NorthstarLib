@@ -51,7 +51,6 @@ class NorthPipe():
         self.rxCallBack = None
 
     def append(self,msg=NTRPMessage):
-
         if self.rxHandleMode == self.RX_HANDLE_MODE_CALLBACK:
             if self.rxCallBack == None: return
             self.rxCallBack(msg) 
@@ -62,20 +61,24 @@ class NorthPipe():
         #Data Ready Callback function 
         #It blocks radio rxThread : keep it small 
         self.rxCallBack = func
-        self.rxHandleMode(self.RX_HANDLE_MODE_CALLBACK)
 
     def setRxHandleMode(self,mode):
         self.rxHandleMode = mode
 
-    def waitConnection(self, timeout = 1):
-        self.txMSG("ACK Request")
-    
+    def waitConnection(self, timeout = 1)->float:
+        oldmode = self.rxHandleMode 
+        self.rxHandleMode = self.RX_HANDLE_MODE_BUFFER
+
         timer = 0.0
-        while(not self.rxbuffer.isAvailable() and timer<=timeout):
+        while self.rxbuffer.isAvailable()<1 and timer<=timeout:
+            self.txMSG("ACK Request")
             time.sleep(0.001)
             timer +=   0.001
-            
-        if(self.rxbuffer.isAvailable() == False): return 0
+        
+        self.rxHandleMode = oldmode
+        
+        if(self.rxbuffer.isAvailable() < 1): return 0
+        msg = self.rxbuffer.read()
         return timer
 
     def transmitPacket(self,txPacket = ntrp.NTRPPacket,force=False):
@@ -166,6 +169,11 @@ class NorthNRF(NorthPipe):
     def txFULLTX(self):
         packet = ntrp.NTRPPacket('FULLTX',ord(self.id))
         self.radio.txHandler(packet,ntrp.NTRP_ROUTER_ID)
+
+    def txTRX(self):
+        packet = ntrp.NTRPPacket('TRX',ord(self.id))
+        self.radio.txHandler(packet,ntrp.NTRP_ROUTER_ID)
+        
 
     def pipeType(self):
         #NRTP_Pipe_t in the router

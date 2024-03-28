@@ -7,9 +7,9 @@ from   northlib.ntrp.ntrpbuffer import NTRPBuffer
 from   northlib.ntrp.northradio import NorthRadio
 from   northlib.ntrp.northpipe import NorthPipe,NorthNRF
 import northlib.ntrp.ntrp as ntrp
-import northlib.ncmd.controller as ncmd
+from northlib.ncmd.northcom import NorthCOM
 
-TESTMESSAGE = "Master Test Message"
+uri = "radio:/0/76/2/E7E7E7E301"
 
 """
 class NTX main
@@ -23,21 +23,13 @@ if __name__ == '__main__':
     
     time.sleep(1)
     
-    rf_pipe = NorthNRF(0,0,address="E7E7E7E301") 
-    print("RF Radio ID = " + str(ord(rf_pipe.id)))
-    
-    
+    rf = NorthNRF(radioindex=0,address="E7E7E7E301")
+
+    print("UAV Com End.")
+
     timer = 0.0
     while timer<2000:
-        #rf_pipe.radio.txHandler(ntrp.NTRPPacket('MSG'),'E',force=False)
-        #rf_pipe.txMSG("Test Message")
-        #time.sleep(0.001)        
-        #rf_pipe.txCMD(ctrl.getAxis())
-        rf_pipe.txCMD(0,[31,0,32,0])
-        if(rf_pipe.rxbuffer.isAvailable()):
-            ntrp.NTRP_LogMessage(rf_pipe.rxbuffer.read())   
-        timer+=0.001
-        #print("{:.3f}".format(timer))
+        rf.txMSG("Testis")
 
     print("app exit")
     radioManager.closeAvailableRadios()

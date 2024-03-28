@@ -99,9 +99,9 @@ class NorthRadio(NorthPort):
 
     def rxHandler(self,msg=ntrp.NTRPMessage):
 
-        """ <DEBUG INCOMING MSG>
+        """ <DEBUG INCOMING MSG>"""
         ntrp.NTRP_LogMessage(msg)
-        """
+        
         if(msg.header == ntrp.NTRPHeader_e.MSG):
             print(self.com + ":/"+msg.talker+"> " + msg.data.decode('ascii',errors='ignore'))
         elif msg.header == ntrp.NTRPHeader_e.NAK:

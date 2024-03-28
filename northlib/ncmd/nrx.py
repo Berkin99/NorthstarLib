@@ -17,7 +17,7 @@ from northlib.ntrp.ntrpbuffer import NTRPBuffer
 import northlib.ntrp.ntrp as ntrp
 
 __author__ = 'Yeniay RD'
-__all__ = ['Nrx','NrxTable','NrxType']
+__all__ = ['Nrx','NrxType_e','NrxType']
 
 NRX_BYTES_MASK  = 0x03
 NRX_1BYTE       = 0x00
@@ -31,15 +31,6 @@ NRX_TYPE_FLOAT  = (0x01<<2)
 
 NRX_SIGNED 	    = (0x00<<3)
 NRX_UNSIGNED 	= (0x01<<3)
-
-NRX_UINT8  = (NRX_1BYTE  | NRX_TYPE_INT | NRX_UNSIGNED)
-NRX_INT8   = (NRX_1BYTE  | NRX_TYPE_INT | NRX_SIGNED)
-NRX_UINT16 = (NRX_2BYTES | NRX_TYPE_INT | NRX_UNSIGNED)
-NRX_INT16  = (NRX_2BYTES | NRX_TYPE_INT | NRX_SIGNED)
-NRX_UINT32 = (NRX_4BYTES | NRX_TYPE_INT | NRX_UNSIGNED)
-NRX_INT32  = (NRX_4BYTES | NRX_TYPE_INT | NRX_SIGNED)
-
-NRX_FLOAT  = (NRX_4BYTES | NRX_TYPE_FLOAT | NRX_SIGNED)
 
 NRX_CORE 	= (1<<5)
 NRX_RONLY 	= (1<<6)
@@ -66,65 +57,28 @@ class NrxType_e(Enum):
 class NrxType():
 
     def __init__(self,rawtype):
-        self.varType  = self.parseType(rawtype)
+        self.varType  = nrx.NrxTypeParse(rawtype)
         self.varBytes = 2**(rawtype&NRX_BYTES_MASK)
         self.readOnly = False
         self.group    = False
       
         if rawtype&NRX_RONLY: self.readOnly = True
         if rawtype&NRX_GROUP: self.group = True
-        
-    def parseType(self,rawtype):
-        if rawtype&NRX_GROUP:
-            if rawtype&NRX_START: return NrxType_e.GROUPSTART
-            return NrxType_e.GROUPSTOP
-        
-        if rawtype&NRX_TYPE_FLOAT: return NrxType_e.FLOAT
-
-        bytesize = 2**(rawtype&NRX_BYTES_MASK)
-
-        if rawtype&NRX_UNSIGNED:
-            if   bytesize==1: return NrxType_e.UINT8
-            elif bytesize==2: return NrxType_e.UINT16
-            elif bytesize==4: return NrxType_e.UINT32
-        else:
-            if   bytesize==1: return NrxType_e.INT8
-            elif bytesize==2: return NrxType_e.INT16
-            elif bytesize==4: return NrxType_e.INT32
-
-    def parseValue(self,rawvalue):
-        if self.group :return None
-        parser = {
-            NrxType_e.UINT8: lambda arr:struct.unpack('B', arr[0:1])[0],
-            NrxType_e.UINT16:lambda arr:struct.unpack('<H', arr[0:2])[0],
-            NrxType_e.UINT32:lambda arr:struct.unpack('<I', arr[0:4])[0],
-            NrxType_e.INT8: lambda arr:struct.unpack(' b', arr[0:1])[0],
-            NrxType_e.INT16:lambda arr:struct.unpack('<h', arr[0:2])[0],
-            NrxType_e.INT32:lambda arr:struct.unpack('<i', arr[0:4])[0],
-            NrxType_e.FLOAT:lambda arr:struct.unpack('<f', arr[0:4])[0],
-        }
-        return parser.get(self.varType)(rawvalue)
-
-    
-
 
 class Nrx:
     #CMD,1,#index1,type1,name
-    def __init__(self,index=0,rawtype=0,name="unknown"):
+    def __init__(self,index=0,rawtype=None,name=str):
         self.index = index
         self.type  = NrxType(rawtype)
         self.name  = name
         self.value = None
     
-    def getName(self)->str:
-        return self.name
-    
-    def setValue(self,raw=bytearray):
-        self.value = self.type.parseValue(raw)
+    def setValue(self,raw):
+        if self.type.group: return
+        self.value = nrx.NrxValueParse(raw,self.type.varType)
 
-    def getValue(self):
-        return self.value
-
+    def append(self,nrx):
+        self.nrxList.append(nrx)
 
 def NrxParse(rawarray = bytearray):
     nrxindex = rawarray[0]
@@ -135,21 +89,45 @@ def NrxParse(rawarray = bytearray):
     nrxname = bytearray()
     return Nrx(nrxindex,nrxtype,nrxname.decode(errors='ignore'))
 
+def NrxTypeParse (rawtype):
+    if rawtype&NRX_GROUP:
+        if rawtype&NRX_START: return NrxType_e.GROUPSTART
+        return NrxType_e.GROUPSTOP
+
+    if rawtype&NRX_TYPE_FLOAT: return NrxType_e.FLOAT
+
+    bytesize = 2**(rawtype&NRX_BYTES_MASK)
+
+    if rawtype&NRX_UNSIGNED:
+        if   bytesize==1: return NrxType_e.UINT8
+        elif bytesize==2: return NrxType_e.UINT16
+        elif bytesize==4: return NrxType_e.UINT32
+    else:
+        if   bytesize==1: return NrxType_e.INT8
+        elif bytesize==2: return NrxType_e.INT16
+        elif bytesize==4: return NrxType_e.INT32    
+
+def NrxValueParse (rawvalue,vartype):
+        parser = {
+            NrxType_e.UINT8: lambda arr:struct.unpack( 'B', arr[0:1])[0],
+            NrxType_e.UINT16:lambda arr:struct.unpack('<H', arr[0:2])[0],
+            NrxType_e.UINT32:lambda arr:struct.unpack('<I', arr[0:4])[0],
+            NrxType_e.INT8:  lambda arr:struct.unpack( 'b', arr[0:1])[0],
+            NrxType_e.INT16: lambda arr:struct.unpack('<h', arr[0:2])[0],
+            NrxType_e.INT32: lambda arr:struct.unpack('<i', arr[0:4])[0],
+            NrxType_e.FLOAT: lambda arr:struct.unpack('<f', arr[0:4])[0],
+        }
+        return parser.get(vartype)(rawvalue)
 
 
+def NrxLog (nx=nrx.Nrx):
+    print("[" + str(nx.index) + "] : " + nx.name + " : " + str(nx.value))
 
-class NrxTable:
-    def __init__(self) -> None:
-        self.table    = []
+NRX_UINT8  = (NRX_1BYTE  | NRX_TYPE_INT | NRX_UNSIGNED)
+NRX_INT8   = (NRX_1BYTE  | NRX_TYPE_INT | NRX_SIGNED)
+NRX_UINT16 = (NRX_2BYTES | NRX_TYPE_INT | NRX_UNSIGNED)
+NRX_INT16  = (NRX_2BYTES | NRX_TYPE_INT | NRX_SIGNED)
+NRX_UINT32 = (NRX_4BYTES | NRX_TYPE_INT | NRX_UNSIGNED)
+NRX_INT32  = (NRX_4BYTES | NRX_TYPE_INT | NRX_SIGNED)
 
-    def append(self,nrxElement = Nrx):
-        self.table.append = nrxElement; 
-
-    def getNrx(self,index):
-        if index >= len(self.table):return None
-        return self.table[index]
-    
-    def setNrx(self,index,nrxElement):
-        if index >= len(self.table):return 
-        self.table[index] = nrxElement
-        
+NRX_FLOAT  = (NRX_4BYTES | NRX_TYPE_FLOAT | NRX_SIGNED)

@@ -8,15 +8,23 @@
 #   2024 Yeniay Uav Flight Control Systems
 #   Research and Development Team
 
+import time
 from northlib.ntrp.northpipe import NorthNRF
 from northlib.ntrp.ntrpbuffer import NTRPBuffer
 import northlib.ntrp.ntrp as ntrp
-
+from northlib.ncmd.nrxtable import NrxTable
 
 __author__ = 'Yeniay RD'
 __all__ = ['NorthCOM']
 
 #Uri Meaner
+
+
+"""
+class NorthTOC:
+append a
+
+"""
 
 class NorthCOM():
     """ 
@@ -35,6 +43,8 @@ class NorthCOM():
         part = uri.split('/')
         self.radio = NorthNRF(int(part[1]),int(part[2]),int(part[3]),part[4])
         self.radio.setCallBack(self.rxHandler)
+        self.radio.setRxHandleMode(self.radio.RX_HANDLE_MODE_CALLBACK)
+        self.radio.txTRX()
         
         self.rxFunctions = {
             ntrp.NTRPHeader_e.NAK:self.rxNAK,
@@ -47,19 +57,41 @@ class NorthCOM():
             ntrp.NTRPHeader_e.RUN:self.rxRUN
         }
 
+        self.connection = False
         self.tableReady = False
-        
+        self.paramtable = NrxTable()
+    
+    def connect(self,timeout = float):
+        rettime = self.radio.waitConnection(timeout)
+        if rettime > 0 : 
+            print("NorthCom Connected : " + str(rettime))
+            self.connection = True
+        else: self.connection = False
 
-    def rxHandler(self,msg = ntrp.NTRPMessage):
+    def synchronize(self):
+        self.radio.rxHandleMode(self.radio.RX_HANDLE_MODE_BUFFER)
+        i=0
+        miss = 0
+        while 1:
+            self.radio.txCMD(dataID=self.CMD_PARAM_CONTENT,channels=bytearray([i]))
+            time.sleep(0.01)
+            if self.radio.rxbuffer.isAvailable()<1:
+                miss+=1 
+                if miss > 50: print ("Too much missing command! : " + str(miss))
+                continue
+
+            msg = self.radio.rxbuffer.read()
+            if not (msg.header == ntrp.NTRPHeader_e.CMD): break
+            if not (msg.dataID == self.CMD_PARAM_CONTENT):break 
+            self.paramtable.tableAppend(msg.data)
+            i+=1
+
+        self.tableReady = True
+        print("TableOfContent Ready")
+
+    def rxHandler(self,msg = ntrp.NTRPMessage()):
         func = self.rxFunctions.get(msg.header.value)
         func(msg)
-
-    def rxTable(self):
-        self.radio.setRxHandleMode(self.radio.RX_HANDLE_MODE_BUFFER)
-        self.radio.txCMD(dataID=self.CMD_PARAM_CONTENT)
-        #While get END 
-        #self.radio.txTOC()
-        self.tableReady = True
 
     def rxNAK(self,msg):
         pass
@@ -70,14 +102,16 @@ class NorthCOM():
     def rxMSG(self,msg):
         pass
 
-    def rxCMD(self,msg):
-        pass
+    def rxCMD(self,msg=ntrp.NTRPMessage()):
+        if msg.dataID == self.CMD_PARAM_CONTENT:
+            self.paramtable.tableAppend(msg.data)
 
     def rxGET(self,msg):
         pass
         
-    def rxSET(self,msg):
-        #add to table of content
+    def rxSET(self,msg=ntrp.NTRPMessage()):
+        nx = self.paramtable.getByIndex(msg.dataID)
+        nx.setValue(msg.data)
         pass
 
     def rxLOG(self,msg):
