@@ -37,7 +37,7 @@ class NorthRadio(NorthPort):
     DEFAULT_BAUD = 115200
    
     WAIT_TICK     = 0.001     #1 ms  Wait Tick (Do not Change)
-    TRANSMIT_HALT = 0.001     #1 ms Transmit Stop (Can changable)
+    TRANSMIT_HALT = 0.01      #10 ms Transmit Stop (Can changable)
      
     def __init__(self, com=None , baud=DEFAULT_BAUD):
         super().__init__(com, baud)
@@ -99,13 +99,16 @@ class NorthRadio(NorthPort):
 
     def rxHandler(self,msg=ntrp.NTRPMessage):
 
-        """ <DEBUG INCOMING MSG>"""
+        """ <DEBUG INCOMING MSG>
         ntrp.NTRP_LogMessage(msg)
-        
+        """
+
         if(msg.header == ntrp.NTRPHeader_e.MSG):
             print(self.com + ":/"+msg.talker+"> " + msg.data.decode('ascii',errors='ignore'))
         elif msg.header == ntrp.NTRPHeader_e.NAK:
             ntrp.NTRP_LogMessage(msg)
+        elif msg.header == ntrp.NTRPHeader_e.ACK:
+            print(self.com + ":/"+msg.talker+"> ACK")
 
         for pipe in self.pipes: #Find related pipe
             if pipe.id == msg.talker: 

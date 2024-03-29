@@ -23,13 +23,29 @@ if __name__ == '__main__':
     
     time.sleep(1)
     
-    rf = NorthNRF(radioindex=0,address="E7E7E7E301")
-
+    #rf  = NorthNRF(radioindex=0,address="E7E7E7E301")
+    #rf.txTRX()
+    
+    uavcom = NorthCOM(uri=uri)
+    uavcom.connect()
+    uavcom.synchronize()
+    
     print("UAV Com End.")
 
+    # pck = ntrp.NTRPMessage('0','E')
+    # pck.setHeader('MSG')
     timer = 0.0
-    while timer<2000:
-        rf.txMSG("Testis")
+    
+    time.sleep(1)
+    nx = uavcom.paramtable.getByName("CALIB.test")
+    print("Found : " + str(nx.name) + " : " + "index: " + str(nx.index))
+    while timer<200:
+        #rf.radio.txHandler(pck=pck,receiverid='E')
+        uavcom.radio.txGET(nx.index)
+        print(nx.value)
+        #timer+=1
+        time.sleep(3)
+        pass
 
     print("app exit")
     radioManager.closeAvailableRadios()

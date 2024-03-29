@@ -33,8 +33,8 @@
 NTRP_Router::NTRP_Router(SERIAL_DEF* serial_port_x, RADIO_DEF* radio){
     serial_port = serial_port_x;
     nrf = radio;
-    nrf_pipe_index = 1;             /*Nrf rx pipe index starts @1*/
-    nrf_last_transmit_index = -1;   /**/
+    nrf_pipe_index = 0;             
+    nrf_last_transmit_index = -1;
     _ready = false;
     mode = R_MODE_TRX;
 }
@@ -62,7 +62,7 @@ uint8_t NTRP_Router::sync(uint32_t timeout){
 
 void NTRP_Router::task(void){
     static NTRP_Message_t ntrp_message; /* Static -> do not need to allocate memmory repeatedly */
-    NTRP_InitMessage(&ntrp_message); /* Set all values to zero */
+    NTRP_InitMessage(&ntrp_message);    /* Set all values to zero */
 
     /* Continously checks serial port for catch a success ntrp_message */
     if(receiveMaster(&ntrp_message)){
@@ -135,9 +135,9 @@ uint8_t NTRP_Router::receiveMaster(NTRP_Message_t* msg){
 /* Transmit the NTRP_Message_t to TARGET NRF PIPE */
 uint8_t NTRP_Router::transmitPipe(uint8_t pipeid, const NTRP_Packet_t* packet,uint8_t size){
     if(mode==R_MODE_FULLRX) return 0;
-    if (pipeid==0) return 0; /*Pipe ID needs to be an ascii char*/
+    if (pipeid==0) return 0; /*Pipee ID needs to be an ascii char*/
     
-    for (uint8_t i = 1; i < nrf_pipe_index; i++) /* Pipe index start @1 */
+    for (uint8_t i = 0; i < nrf_pipe_index; i++) /* Pipe index start @1 */
     {
         if(nrf_pipe[i].id != pipeid) continue;
         
@@ -145,7 +145,7 @@ uint8_t NTRP_Router::transmitPipe(uint8_t pipeid, const NTRP_Packet_t* packet,ui
 
         if(nrf_last_transmit_index!=i){
             debug("OpenWritingPipe");
-            nrf->openWritingPipe(nrf_pipe[i].address);   /* RF24 -> TX Settling (!!!CHANGES THE RX0_ADDRESS TOO!!!)*/
+            nrf->openWritingPipe(nrf_pipe[i].txaddress);   /* RF24 -> TX Settling (!!!CHANGES THE RX0_ADDRESS TOO!!!)*/
             nrf_last_transmit_index = i;
         }    
         
@@ -153,10 +153,10 @@ uint8_t NTRP_Router::transmitPipe(uint8_t pipeid, const NTRP_Packet_t* packet,ui
             nrf->write(_txBuffer,size,1);
             return 1;
         }
-
-        nrf->stopListening();       /* RF24 -> Standby I */
-        nrf->write(_txBuffer,size); /*Write to TX FIFO*/
-        nrf->startListening();      /*Set to RX Mode again*/
+        
+        nrf->stopListening();                           /* RF24 -> Standby I */
+        nrf->write(_txBuffer,size);                     /*Write to TX FIFO*/
+        nrf->startListening();                          /*Set to RX Mode again*/
         return 1;
     }
     return 0;
@@ -165,14 +165,14 @@ uint8_t NTRP_Router::transmitPipe(uint8_t pipeid, const NTRP_Packet_t* packet,ui
 void NTRP_Router::transmitPipeFast(uint8_t pipeid,const uint8_t* raw_sentence, uint8_t size){
     if(mode==R_MODE_FULLRX) return;
 
-    for (uint8_t i = 1; i < nrf_pipe_index; i++)
+    for (uint8_t i = 0; i < nrf_pipe_index; i++)
     {
         if(nrf_pipe[i].id != pipeid) continue;
             
         if(mode==R_MODE_TRX) nrf->stopListening(); // Set to TX Mode for transaction
 
         if(nrf_last_transmit_index != i){
-            nrf->openWritingPipe(nrf_pipe[i].address);  // Set Main TX address
+            nrf->openWritingPipe(nrf_pipe[i].txaddress);  // Set Main TX address
             nrf_last_transmit_index = i;
         }
 
@@ -187,6 +187,7 @@ uint8_t NTRP_Router::receivePipe(NTRP_Message_t* msg){
     uint8_t pipe = 0;
     if(nrf->available(&pipe)){
         nrf->read(_rxBuffer,NTRP_MAX_MSG_SIZE);
+    
         NTRP_PackParse(&msg->packet,_rxBuffer);
 
         msg->receiverID = NTRP_MASTER_ID;
@@ -230,25 +231,28 @@ void NTRP_Router::routerCOM(NTRP_Packet_t* cmd, uint8_t size){
         break;
     }
     case R_OPENPIPE:
-        if(size<7) return; /* Required byte length */ 
-
         NTRP_Pipe_t pipe;
         pipe.id =           cmd->dataID; /* Reference PIPE id char : '1','2'... */
         pipe.channel =      cmd->data.bytes[0];
         pipe.bandwidth =    cmd->data.bytes[1];
 
         for(uint8_t i = 0; i<5 ; i++){
-            pipe.address[i] = cmd->data.bytes[i+2];   
+            pipe.txaddress[i] = cmd->data.bytes[i+2]; /*301*/
+            pipe.rxaddress[i] = cmd->data.bytes[i+2]; /*301*/  
         }
+
+        //pipe.txaddress[4]--; /*300*/
 
         if(openPipe(pipe)){debug("NRF Pipe Opened");}
         else{debug("NRF Pipe Error");}
     break;
     case R_TRX:
         debug("NRF TRX");
+        nrf->startListening();
         mode = R_MODE_TRX; break;
     case R_FULLRX:
         debug("NRF FULLRX");
+        nrf->startListening();
         mode = R_MODE_FULLRX; break;
     case R_FULLTX:
         debug("NRF FULLTX");
@@ -271,18 +275,11 @@ uint8_t NTRP_Router::openPipe(NTRP_Pipe_t cmd){
     //TODO: nrf->setChannel(cmd.channel);
     //TODO: nrf->setSpeed(speeds[cmd.speedbyte])
 
-    /*nrf_pipe_index starts @1*/
-
-    /*READ MINUS WRITE*/
-    /********do not edit*******/
-    nrf->openReadingPipe(nrf_pipe_index, cmd.address);
-    cmd.address[5]-=1; /* RX = ...01 , TX = ...00 */ 
-    /*transmitPipe() opens the writing pipe*/     
-    nrf->startListening();
-    /********do not edit*******/
+    nrf->openReadingPipe(nrf_pipe_index, cmd.rxaddress);  /*301*/
+    nrf->startListening();  
 
     nrf_pipe[nrf_pipe_index] = cmd; /*Pipe index is need to be same with nrf rx pipe index*/
-    nrf_pipe_index++; /*Incremented for next openpipe & reptresenting the pipe size */   
+    nrf_pipe_index++;               /*Incremented for next openpipe & reptresenting the pipe size */   
     return 1;
 }
 

@@ -61,7 +61,7 @@ class NorthCOM():
         self.tableReady = False
         self.paramtable = NrxTable()
     
-    def connect(self,timeout = float):
+    def connect(self,timeout = 30):
         rettime = self.radio.waitConnection(timeout)
         if rettime > 0 : 
             print("NorthCom Connected : " + str(rettime))
@@ -69,7 +69,7 @@ class NorthCOM():
         else: self.connection = False
 
     def synchronize(self):
-        self.radio.rxHandleMode(self.radio.RX_HANDLE_MODE_BUFFER)
+        self.radio.setRxHandleMode(self.radio.RX_HANDLE_MODE_BUFFER)
         i=0
         miss = 0
         while 1:
@@ -87,10 +87,11 @@ class NorthCOM():
             i+=1
 
         self.tableReady = True
-        print("TableOfContent Ready")
+        self.radio.setRxHandleMode(self.radio.RX_HANDLE_MODE_CALLBACK)
 
     def rxHandler(self,msg = ntrp.NTRPMessage()):
-        func = self.rxFunctions.get(msg.header.value)
+        func = self.rxFunctions.get(msg.header)
+        if func == None: "Packet Rx Handle Error : Header Not Found"
         func(msg)
 
     def rxNAK(self,msg):
@@ -110,9 +111,12 @@ class NorthCOM():
         pass
         
     def rxSET(self,msg=ntrp.NTRPMessage()):
+        print("rxSET")
         nx = self.paramtable.getByIndex(msg.dataID)
+        if nx == None: 
+            print("rxSET Not found in the table : " + str(msg.dataID))
+            return
         nx.setValue(msg.data)
-        pass
 
     def rxLOG(self,msg):
         pass

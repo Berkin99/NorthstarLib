@@ -60,10 +60,11 @@ typedef enum{
 }NTRP_RouterMode;
 
 typedef struct{
-  uint8_t id;         /*Pipe ID (Unique) : Represents the 5 byte address*/
-  uint8_t channel;    /*Channel (Not Implemented)*/
-  uint8_t bandwidth;  /*Bandwidth (Not Implemented)*/
-  uint8_t address[5]; /*5 byte address (Unique)*/
+  uint8_t id;           /*Pipe ID (Unique) : Represents the 5 byte address*/
+  uint8_t channel;      /*Channel (Not Implemented)*/
+  uint8_t bandwidth;    /*Bandwidth (Not Implemented)*/
+  uint8_t txaddress[5];   /*5 byte address (Unique)*/
+  uint8_t rxaddress[5];
 }NTRP_Pipe_t;
 
 class NTRP_Router{
@@ -75,7 +76,7 @@ class NTRP_Router{
     RADIO_DEF* nrf;
 
     NTRP_Pipe_t nrf_pipe[NRF_MAX_PIPE_SIZE];  /* 5 PIPE. Do not use pipe 0 for multiceiver applications */
-    uint8_t nrf_pipe_index;                   /* Opened pipe size + 1 (Index 0 not used) */
+    uint8_t nrf_pipe_index;                   
     int8_t  nrf_last_transmit_index;          /* Last Transmit Pipe Index */
     
     uint32_t _timer_us;

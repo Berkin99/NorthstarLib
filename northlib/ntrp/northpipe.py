@@ -65,7 +65,7 @@ class NorthPipe():
     def setRxHandleMode(self,mode):
         self.rxHandleMode = mode
 
-    def waitConnection(self, timeout = 1)->float:
+    def waitConnection(self, timeout = float)->float:
         oldmode = self.rxHandleMode 
         self.rxHandleMode = self.RX_HANDLE_MODE_BUFFER
 

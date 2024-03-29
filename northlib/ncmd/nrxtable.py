@@ -26,6 +26,7 @@ class NrxTable:
         self.ingroup = False
 
     def tableAppend(self,rawbytes):
+        #print(rawbytes)
         nrxElement = nrx.NrxParse(rawbytes)
         if nrxElement.index != len(self.table): return #Append error
 
@@ -33,17 +34,19 @@ class NrxTable:
         nrx.NrxLog(nrxElement)
 
         self.table.append(nrxElement)
-        if self.ingroup == False: self.indexMap.append(nrxElement.index)
+        if self.ingroup == False: 
+            self.indexMap.append(nrxElement.index)
 
-        if nrxElement.type == nrx.NrxType_e.GROUPSTART:
+        if nrxElement.type.varType == nrx.NrxType_e.GROUPSTART:
             self.ingroup = True
-        elif nrxElement.type == nrx.NrxType_e.GROUPSTOP:
+        elif nrxElement.type.varType == nrx.NrxType_e.GROUPSTOP:
             self.ingroup = False
     
-    def getByIndex(self,index=int)->nrx.Nrx:
+    def getByIndex(self,index=int)->nrx.Nrx|None:
+        if index>len(self.table): return None
         return self.table[index]
     
-    def getByName(self,name = str):
+    def getByName(self,name = str)->nrx.Nrx:
         part = name.split('.',1)
         nx =None
         for ix in self.indexMap:
@@ -51,10 +54,17 @@ class NrxTable:
                 nx = self.table[ix]
         
         if len(part)<2: return nx 
+        if nx==None: return None
 
         inx = nx.index+1
 
-        while not self.table[inx].group:
+        while not self.table[inx].type.group:
             if self.table[inx].name == part[1]:
                 return self.table[inx]
             inx+=1
+
+
+
+def NrxTableLog(table):
+    for i in range(len(table.table)):
+        nrx.NrxLog(table.table[i])

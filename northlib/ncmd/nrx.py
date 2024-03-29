@@ -70,7 +70,7 @@ class Nrx:
     def __init__(self,index=0,rawtype=None,name=str):
         self.index = index
         self.type  = NrxType(rawtype)
-        self.name  = name
+        self.name  = str(name)
         self.value = None
     
     def setValue(self,raw):
@@ -80,14 +80,16 @@ class Nrx:
     def append(self,nrx):
         self.nrxList.append(nrx)
 
-def NrxParse(rawarray = bytearray):
-    nrxindex = rawarray[0]
-    nrxtype = rawarray[1]
+def NrxParse(rawarray = bytearray)->Nrx:
+    nrxindex = int(rawarray[0])
+    nrxtype = int(rawarray[1])
     nrxname = bytearray()
     for i in range(len(rawarray)-2):
-        nrxname.append(rawarray[i+2])    
-    nrxname = bytearray()
-    return Nrx(nrxindex,nrxtype,nrxname.decode(errors='ignore'))
+        if rawarray[i+2] == 0x00: break
+        nrxname.append(rawarray[i+2]) 
+
+    element = Nrx(index=nrxindex,rawtype=nrxtype,name=nrxname.decode(errors='ignore'))
+    return element
 
 def NrxTypeParse (rawtype):
     if rawtype&NRX_GROUP:
@@ -120,8 +122,8 @@ def NrxValueParse (rawvalue,vartype):
         return parser.get(vartype)(rawvalue)
 
 
-def NrxLog (nx=nrx.Nrx):
-    print("[" + str(nx.index) + "] : " + nx.name + " : " + str(nx.value))
+def NrxLog (nx):
+    print("[" + str(nx.index) + "] : " + nx.type.varType.name + " : " + str(nx.name) + " : " + str(nx.value))
 
 NRX_UINT8  = (NRX_1BYTE  | NRX_TYPE_INT | NRX_UNSIGNED)
 NRX_INT8   = (NRX_1BYTE  | NRX_TYPE_INT | NRX_SIGNED)
