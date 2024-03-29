@@ -30,9 +30,10 @@ class NrxTable:
         nrxElement = nrx.NrxParse(rawbytes)
         if nrxElement.index != len(self.table): return #Append error
 
-        """DEBUG ELEMENT"""
+        """DEBUG ELEMENT
         nrx.NrxLog(nrxElement)
-
+        """
+        
         self.table.append(nrxElement)
         if self.ingroup == False: 
             self.indexMap.append(nrxElement.index)

@@ -43,11 +43,11 @@ def radioSearch(baud=115200):
                 nr.destroy()
         except: serial.SerialException
         
-def closeAvailableRadios():
-    #Reset the radios list
+def closeAvailableRadios(): 
     for radio in availableRadios:
         radio.destroy()
     availableRadios.clear()
+    print("RadioManager:/> All radios closed.")
 
 def getRadio(index=int)->NorthRadio:
     if index>=len(availableRadios) or index < 0: raise ValueError

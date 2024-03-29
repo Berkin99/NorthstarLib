@@ -72,8 +72,8 @@ class NorthPipe():
         timer = 0.0
         while self.rxbuffer.isAvailable()<1 and timer<=timeout:
             self.txMSG("ACK Request")
-            time.sleep(0.001)
-            timer +=   0.001
+            time.sleep(0.1)
+            timer +=   0.1
         
         self.rxHandleMode = oldmode
         
@@ -115,6 +115,9 @@ class NorthPipe():
         self.txpck.dataID = dataID
         self.txpck.data = channels   
         self.transmitPacket(self.txpck)
+
+    def printID(self,msg=str):
+        print(self.radio.com + ":/" + self.id + "> " + msg)
         
 class NorthNRF(NorthPipe):
         
@@ -131,7 +134,7 @@ class NorthNRF(NorthPipe):
     NRF_1000KBPS = 1
     NRF_2000KBPS = 2
 
-    def __init__(self, radioindex = 0, ch = 0, bandwidth = NRF_1000KBPS, address = "E7E7E7E900"):
+    def __init__(self, radioindex = 0, ch = 0, bandwidth = NRF_1000KBPS, address = "E7E7E7E301"):
         super().__init__(pipe_id='0', radio=nt.getRadio(radioindex))
     
         self.channel = ch                       #int
@@ -149,7 +152,7 @@ class NorthNRF(NorthPipe):
     def setBandwidth(self,bw=NRF_1000KBPS):
         self.bandwidth = bw
     
-    def setAddress(self, adr="E7E7E7E900"):
+    def setAddress(self, adr="E7E7E7E301"):
         self.address = bytes.fromhex(adr)
         if(len(self.address) != 5): raise ValueError() #NRF Address is 5 bytes
     

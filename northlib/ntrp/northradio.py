@@ -70,9 +70,9 @@ class NorthRadio(NorthPort):
         if self.isAlive == True: return False              #Return if already begin
         if self.mode == self.NO_CONNECTION : return False   #Return if port has no connection
         self.isAlive = True  #First set isAlive to <True> so threats can go into while loop
-        self.txThread = threading.Thread(target=self.txProcess,daemon=False)
+        self.txThread = threading.Thread(target=self.txProcess,daemon=True)
         self.txThread.start()
-        self.rxThread = threading.Thread(target=self.rxProcess,daemon=False)
+        self.rxThread = threading.Thread(target=self.rxProcess,daemon=True)
         self.rxThread.start()
         return True 
 
@@ -107,8 +107,7 @@ class NorthRadio(NorthPort):
             print(self.com + ":/"+msg.talker+"> " + msg.data.decode('ascii',errors='ignore'))
         elif msg.header == ntrp.NTRPHeader_e.NAK:
             ntrp.NTRP_LogMessage(msg)
-        elif msg.header == ntrp.NTRPHeader_e.ACK:
-            print(self.com + ":/"+msg.talker+"> ACK")
+        
 
         for pipe in self.pipes: #Find related pipe
             if pipe.id == msg.talker: 

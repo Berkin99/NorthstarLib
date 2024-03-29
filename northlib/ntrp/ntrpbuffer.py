@@ -66,3 +66,7 @@ class NTRPBuffer():
     
     def getBuffer(self):
         return self.rxbuffer
+    
+    def flush(self):
+        while self.isAvailable()>0:
+            self.read()

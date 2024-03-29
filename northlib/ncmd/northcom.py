@@ -17,16 +17,9 @@ from northlib.ncmd.nrxtable import NrxTable
 __author__ = 'Yeniay RD'
 __all__ = ['NorthCOM']
 
-#Uri Meaner
 
+class NorthCOM(NorthNRF):
 
-"""
-class NorthTOC:
-append a
-
-"""
-
-class NorthCOM():
     """ 
     NorthCommander Core Class
     Set URI : radio:/radioindex/ch/bandwidth/address
@@ -41,10 +34,10 @@ class NorthCOM():
     def __init__(self, uri="radio:/0/76/2/E7E7E7E301"):
         self.uri = uri
         part = uri.split('/')
-        self.radio = NorthNRF(int(part[1]),int(part[2]),int(part[3]),part[4])
-        self.radio.setCallBack(self.rxHandler)
-        self.radio.setRxHandleMode(self.radio.RX_HANDLE_MODE_CALLBACK)
-        self.radio.txTRX()
+        super().__init__(int(part[1]),int(part[2]),int(part[3]),part[4])
+        self.setCallBack(self.rxHandler)
+        self.setRxHandleMode(self.RX_HANDLE_MODE_CALLBACK)
+        self.txTRX()
         
         self.rxFunctions = {
             ntrp.NTRPHeader_e.NAK:self.rxNAK,
@@ -60,48 +53,50 @@ class NorthCOM():
         self.connection = False
         self.tableReady = False
         self.paramtable = NrxTable()
-    
+
     def connect(self,timeout = 30):
-        rettime = self.radio.waitConnection(timeout)
+        rettime = self.waitConnection(timeout)
         if rettime > 0 : 
             print("NorthCom Connected : " + str(rettime))
             self.connection = True
         else: self.connection = False
 
     def synchronize(self):
-        self.radio.setRxHandleMode(self.radio.RX_HANDLE_MODE_BUFFER)
+        self.setRxHandleMode(self.RX_HANDLE_MODE_BUFFER)
         i=0
         miss = 0
+        self.rxbuffer.flush()
         while 1:
-            self.radio.txCMD(dataID=self.CMD_PARAM_CONTENT,channels=bytearray([i]))
+            self.txCMD(dataID=self.CMD_PARAM_CONTENT,channels=bytearray([i]))
             time.sleep(0.01)
-            if self.radio.rxbuffer.isAvailable()<1:
+            if self.rxbuffer.isAvailable()<1:
                 miss+=1 
-                if miss > 50: print ("Too much missing command! : " + str(miss))
+                if miss > 50: self.printID("Too much missing command! : " + str(miss))
                 continue
 
-            msg = self.radio.rxbuffer.read()
-            if not (msg.header == ntrp.NTRPHeader_e.CMD): break
-            if not (msg.dataID == self.CMD_PARAM_CONTENT):break 
+            msg = self.rxbuffer.read()
+            if (msg.header == ntrp.NTRPHeader_e.ACK): break
+            if not (msg.header == ntrp.NTRPHeader_e.CMD) : continue
+            if not (msg.dataID == self.CMD_PARAM_CONTENT): continue 
             self.paramtable.tableAppend(msg.data)
             i+=1
 
         self.tableReady = True
-        self.radio.setRxHandleMode(self.radio.RX_HANDLE_MODE_CALLBACK)
+        self.setRxHandleMode(self.RX_HANDLE_MODE_CALLBACK)
 
     def rxHandler(self,msg = ntrp.NTRPMessage()):
         func = self.rxFunctions.get(msg.header)
-        if func == None: "Packet Rx Handle Error : Header Not Found"
+        if func == None: self.printID("Packet Rx Handle Error : Header Not Found")
         func(msg)
 
     def rxNAK(self,msg):
-        pass
+        self.printID('NAK')
 
     def rxACK(self,msg):
-        pass
+        self.printID('ACK')
 
-    def rxMSG(self,msg):
-        pass
+    def rxMSG(self,msg=ntrp.NTRPMessage()):
+        self.printID(msg.data.decode('ascii',errors='ignore'))
 
     def rxCMD(self,msg=ntrp.NTRPMessage()):
         if msg.dataID == self.CMD_PARAM_CONTENT:
@@ -111,10 +106,9 @@ class NorthCOM():
         pass
         
     def rxSET(self,msg=ntrp.NTRPMessage()):
-        print("rxSET")
         nx = self.paramtable.getByIndex(msg.dataID)
         if nx == None: 
-            print("rxSET Not found in the table : " + str(msg.dataID))
+            self.printID("rxSET Not found in the table : " + str(msg.dataID))
             return
         nx.setValue(msg.data)
 
@@ -123,13 +117,4 @@ class NorthCOM():
 
     def rxRUN(self,msg):
         pass
-
-    def logAppend(self,parameterName):
-        if self.tableReady == False : return
-        pass
-
-    def logRemove(self,parameterName):
-        pass
-    
-
 

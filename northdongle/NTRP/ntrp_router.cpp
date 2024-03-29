@@ -33,7 +33,7 @@
 NTRP_Router::NTRP_Router(SERIAL_DEF* serial_port_x, RADIO_DEF* radio){
     serial_port = serial_port_x;
     nrf = radio;
-    nrf_pipe_index = 0;             
+    nrf_pipe_index = 1;             
     nrf_last_transmit_index = -1;
     _ready = false;
     mode = R_MODE_TRX;
@@ -237,11 +237,11 @@ void NTRP_Router::routerCOM(NTRP_Packet_t* cmd, uint8_t size){
         pipe.bandwidth =    cmd->data.bytes[1];
 
         for(uint8_t i = 0; i<5 ; i++){
-            pipe.txaddress[i] = cmd->data.bytes[i+2]; /*301*/
+            pipe.txaddress[i] = cmd->data.bytes[i+2]; /*300*/
             pipe.rxaddress[i] = cmd->data.bytes[i+2]; /*301*/  
         }
 
-        //pipe.txaddress[4]--; /*300*/
+        pipe.txaddress[4]--; /*300*/
 
         if(openPipe(pipe)){debug("NRF Pipe Opened");}
         else{debug("NRF Pipe Error");}
