@@ -35,20 +35,15 @@ class NorthCOM(NorthNRF):
         self.uri = uri
         part = uri.split('/')
         super().__init__(int(part[1]),int(part[2]),int(part[3]),part[4])
-        self.setCallBack(self.rxHandler)
+        
+        self.setCallBack(ntrp.NTRPHeader_e.ACK,self.rxACK)
+        self.setCallBack(ntrp.NTRPHeader_e.NAK,self.rxNAK)
+        self.setCallBack(ntrp.NTRPHeader_e.SET,self.rxSET)
+        self.setCallBack(ntrp.NTRPHeader_e.LOG,self.rxSET)
+        self.setCallBack(ntrp.NTRPHeader_e.CMD,self.rxCMD)
+        
         self.setRxHandleMode(self.RX_HANDLE_MODE_CALLBACK)
         self.txTRX()
-        
-        self.rxFunctions = {
-            ntrp.NTRPHeader_e.NAK:self.rxNAK,
-            ntrp.NTRPHeader_e.ACK:self.rxACK,
-            ntrp.NTRPHeader_e.MSG:self.rxMSG,
-            ntrp.NTRPHeader_e.CMD:self.rxCMD,
-            ntrp.NTRPHeader_e.GET:self.rxGET,
-            ntrp.NTRPHeader_e.SET:self.rxSET,
-            ntrp.NTRPHeader_e.LOG:self.rxLOG,
-            ntrp.NTRPHeader_e.RUN:self.rxRUN
-        }
 
         self.connection = False
         self.tableReady = False
@@ -57,7 +52,7 @@ class NorthCOM(NorthNRF):
     def connect(self,timeout = 30):
         rettime = self.waitConnection(timeout)
         if rettime > 0 : 
-            print("NorthCom Connected : " + str(rettime))
+            self.printID("connected in " + str(rettime) + " seconds.")
             self.connection = True
         else: self.connection = False
 
@@ -86,7 +81,7 @@ class NorthCOM(NorthNRF):
 
     def rxHandler(self,msg = ntrp.NTRPMessage()):
         func = self.rxFunctions.get(msg.header)
-        if func == None: self.printID("Packet Rx Handle Error : Header Not Found")
+        if func == None: self.printID("rxHandler Packet Error : Header Not Found")
         func(msg)
 
     def rxNAK(self,msg):
@@ -95,26 +90,14 @@ class NorthCOM(NorthNRF):
     def rxACK(self,msg):
         self.printID('ACK')
 
-    def rxMSG(self,msg=ntrp.NTRPMessage()):
-        self.printID(msg.data.decode('ascii',errors='ignore'))
-
     def rxCMD(self,msg=ntrp.NTRPMessage()):
         if msg.dataID == self.CMD_PARAM_CONTENT:
             self.paramtable.tableAppend(msg.data)
 
-    def rxGET(self,msg):
-        pass
-        
     def rxSET(self,msg=ntrp.NTRPMessage()):
         nx = self.paramtable.getByIndex(msg.dataID)
         if nx == None: 
             self.printID("rxSET Not found in the table : " + str(msg.dataID))
             return
         nx.setValue(msg.data)
-
-    def rxLOG(self,msg):
-        pass
-
-    def rxRUN(self,msg):
-        pass
 

@@ -22,15 +22,15 @@ if __name__ == '__main__':
     uavcom.connect()
     uavcom.synchronize()
         
-    nx = uavcom.paramtable.getByName("calib.test2")
+    nx = uavcom.paramtable.getByName("calib.test")
     print("Found : " + str(nx.name) + " : " + "index: " + str(nx.index))
     
     NrxTableLog(uavcom.paramtable)
 
-    # while uavcom.radio.isRadioAlive():
-    #     uavcom.txGET(nx.index) #Want it From COM 
-    #     print(nx.value)
-    #     time.sleep(1)
+    while uavcom.radio.isRadioAlive():
+        uavcom.txGET(nx.index) #Want it From COM 
+        print(nx.value)
+        time.sleep(1)
     
     uavcom.destroy()
     radioManager.closeAvailableRadios()

@@ -36,7 +36,7 @@
 #define NTRP_MAX_PACKET_SIZE 	28
 
 typedef enum{
-  NTRP_NAK 		= 0, /* Illegal to print NAK with '0' DATA ID */
+  NTRP_NAK 		= 0, /* Illegal to print NAK with 0 DATA ID */
   NTRP_ACK 		= 1,
   NTRP_MSG 		= 2, /*Debug Message + NOP*/
   NTRP_CMD 		= 3, /*Commander + CMD ID + COMMANDARGV*/

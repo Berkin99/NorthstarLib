@@ -48,20 +48,28 @@ class NorthPipe():
 
         self.rxbuffer = NTRPBuffer(20) #LIFO Ring Buffer
         self.rxHandleMode = self.RX_HANDLE_MODE_BUFFER
-        self.rxCallBack = None
 
-    def append(self,msg=NTRPMessage):
-        if self.rxHandleMode == self.RX_HANDLE_MODE_CALLBACK:
-            if self.rxCallBack == None: return
-            self.rxCallBack(msg) 
-        elif self.rxHandleMode == self.RX_HANDLE_MODE_BUFFER:
-            self.rxbuffer.append(msg)
+        self.rxCallBack = {
+            NTRPHeader_e.NAK:None,
+            NTRPHeader_e.ACK:None,
+            NTRPHeader_e.MSG:None,
+            NTRPHeader_e.CMD:None,
+            NTRPHeader_e.GET:None,
+            NTRPHeader_e.SET:None,
+            NTRPHeader_e.LOG:None,
+            NTRPHeader_e.RUN:None
+        }
+
+        self.setCallBack(NTRPHeader_e.MSG,self.rxMSG)
             
-    def setCallBack(self, func):
+    def setCallBack(self, header=NTRPHeader_e, callback=callable):
         #Data Ready Callback function 
         #It blocks radio rxThread : keep it small 
-        self.rxCallBack = func
-
+        try:
+            self.rxCallBack[header] = callback
+        except KeyError:
+            self.printID("setCallBack : Key Error")        
+        
     def setRxHandleMode(self,mode):
         self.rxHandleMode = mode
 
@@ -80,6 +88,17 @@ class NorthPipe():
         if(self.rxbuffer.isAvailable() < 1): return 0
         msg = self.rxbuffer.read()
         return timer
+
+    def receivePacket(self,rxPacket = ntrp.NTRPMessage()):
+        if self.rxHandleMode == self.RX_HANDLE_MODE_BUFFER: 
+            self.rxbuffer.append(rxPacket)
+        elif self.rxHandleMode == self.RX_HANDLE_MODE_CALLBACK:
+            rxCallBack = self.rxCallBack.get(rxPacket.header)
+            if rxCallBack == None: self.printID("receivePacket Error : " + rxPacket.header.name + " Header CallBack is None")
+            else : rxCallBack(rxPacket)
+
+    def rxMSG(self,ntrpmsg=NTRPMessage()):
+        self.printID(ntrpmsg.data.decode('ascii',errors='ignore'))
 
     def transmitPacket(self,txPacket = ntrp.NTRPPacket,force=False):
         #Packet with receiver ID = PIPE ID

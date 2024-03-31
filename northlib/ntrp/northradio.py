@@ -111,7 +111,7 @@ class NorthRadio(NorthPort):
 
         for pipe in self.pipes: #Find related pipe
             if pipe.id == msg.talker: 
-                pipe.append(msg)
+                pipe.receivePacket(msg)
                 return
             
         if msg.talker == 'E': return #Talker is router
