@@ -73,9 +73,13 @@ class Nrx:
         self.name  = str(name)
         self.value = None
     
-    def setValue(self,raw):
+    def setValueRaw(self,raw):
         if self.type.group: return
         self.value = nrx.NrxValueParse(raw,self.type.varType)
+
+    def getValueRaw(self):
+        if self.type.group: return None 
+        return nrx.NrxValueUnite(self.value,self.type.varType) 
 
     def append(self,nrx):
         self.nrxList.append(nrx)
@@ -120,6 +124,18 @@ def NrxValueParse (rawvalue,vartype):
             NrxType_e.FLOAT: lambda arr:struct.unpack('<f', arr[0:4])[0],
         }
         return parser.get(vartype)(rawvalue)
+
+def NrxValueUnite (value,vartype)->bytes:
+        parser = {
+            NrxType_e.UINT8: lambda val:struct.pack( 'B', val),
+            NrxType_e.UINT16:lambda val:struct.pack('<H', val),
+            NrxType_e.UINT32:lambda val:struct.pack('<I', val),
+            NrxType_e.INT8:  lambda val:struct.pack( 'b', val),
+            NrxType_e.INT16: lambda val:struct.pack('<h', val),
+            NrxType_e.INT32: lambda val:struct.pack('<i', val),
+            NrxType_e.FLOAT: lambda val:struct.pack('<f', val),
+        }
+        return parser.get(vartype)(value)
 
 
 def NrxLog (nx):

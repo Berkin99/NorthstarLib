@@ -11,8 +11,10 @@
 import time
 from northlib.ntrp.northpipe import NorthNRF
 from northlib.ntrp.ntrpbuffer import NTRPBuffer
-import northlib.ntrp.ntrp as ntrp
 from northlib.ncmd.nrxtable import NrxTable
+
+import northlib.ncmd.nrx as nrx
+import northlib.ntrp.ntrp as ntrp
 
 __author__ = 'Yeniay RD'
 __all__ = ['NorthCOM']
@@ -46,7 +48,6 @@ class NorthCOM(NorthNRF):
         self.txTRX()
 
         self.connection = False
-        self.tableReady = False
         self.paramtable = NrxTable()
 
     def connect(self,timeout = 30):
@@ -76,13 +77,23 @@ class NorthCOM(NorthNRF):
             self.paramtable.tableAppend(msg.data)
             i+=1
 
-        self.tableReady = True
         self.setRxHandleMode(self.RX_HANDLE_MODE_CALLBACK)
 
-    def rxHandler(self,msg = ntrp.NTRPMessage()):
-        func = self.rxFunctions.get(msg.header)
-        if func == None: self.printID("rxHandler Packet Error : Header Not Found")
-        func(msg)
+    def getParamTable(self):
+        return self.paramtable
+
+    def SET(self,name=str,value=any):
+        self.paramtable.setByName(name,value)
+        nx = self.paramtable.search(name)
+        if nx == None: return 
+        arr = self.paramtable.getByIndex(nx.index)
+        self.txSET(nx.index,arr)
+
+    def GET(self,name=str)->nrx.Nrx:
+        nx = self.paramtable.search(name)
+        if nx == None: return None
+        self.txGET(nx.index)
+        return self.paramtable.getByName(name)
 
     def rxNAK(self,msg):
         self.printID('NAK')
@@ -95,9 +106,6 @@ class NorthCOM(NorthNRF):
             self.paramtable.tableAppend(msg.data)
 
     def rxSET(self,msg=ntrp.NTRPMessage()):
-        nx = self.paramtable.getByIndex(msg.dataID)
-        if nx == None: 
+        if not self.paramtable.setByIndex(msg.dataID,msg.data):
             self.printID("rxSET Not found in the table : " + str(msg.dataID))
             return
-        nx.setValue(msg.data)
-

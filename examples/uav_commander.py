@@ -21,15 +21,23 @@ if __name__ == '__main__':
     uavcom = NorthCOM(uri=uri)
     uavcom.connect()
     uavcom.synchronize()
-        
-    nx = uavcom.paramtable.getByName("calib.test")
-    print("Found : " + str(nx.name) + " : " + "index: " + str(nx.index))
     
-    NrxTableLog(uavcom.paramtable)
+    time.sleep(1)
+    
+    vector = uavcom.GET("vector")
+    print(vector)
+
+    uavcom.SET("vector",[31,62,93])
+    time.sleep(1)
+    
+    vector = uavcom.GET("vector")
+    print(vector)
+    
+    nx = uavcom.paramtable.search("vector")
 
     while uavcom.radio.isRadioAlive():
-        uavcom.txGET(nx.index) #Want it From COM 
-        print(nx.value)
+        uavcom.txGET(nx.index)
+        NrxTableLog(uavcom.paramtable)
         time.sleep(1)
     
     uavcom.destroy()
