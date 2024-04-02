@@ -98,7 +98,8 @@ class NorthPipe():
             else : rxCallBack(rxPacket)
 
     def rxMSG(self,ntrpmsg=NTRPMessage()):
-        self.printID(ntrpmsg.data.decode('ascii',errors='ignore'))
+        pass #Radio Prints Already
+        #self.printID(ntrpmsg.data.decode('ascii',errors='ignore'))
 
     def transmitPacket(self,txPacket = ntrp.NTRPPacket,force=False):
         #Packet with receiver ID = PIPE ID

@@ -59,10 +59,15 @@ void setup() {
 }
 
 void loop() {
-  //router.task();
   static NTRP_Message_t msg;
   NTRP_InitMessage(&msg);
   if(router.receiveMaster(&msg)){
+    router.route(&msg);
+    digitalWrite(LEDPIN, ledvalue);
+    ledvalue = !ledvalue; 
+  }
+  NTRP_InitMessage(&msg);
+  if(router.receivePipe(&msg)){
     router.route(&msg);
     digitalWrite(LEDPIN, ledvalue);
     ledvalue = !ledvalue; 

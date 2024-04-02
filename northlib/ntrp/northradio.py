@@ -37,8 +37,8 @@ class NorthRadio(NorthPort):
     DEFAULT_BAUD = 115200
    
     WAIT_TICK     = 0.001     #1 ms  Wait Tick (Do not Change)
-    THREAD_HALT   = 0.010     #10 ms Thread Stop (Can changable)
-     
+    THREAD_HALT   = 0.01      #10 ms Thread Stop (Can changable)
+    
     def __init__(self, com=None , baud=DEFAULT_BAUD):
         super().__init__(com, baud)
         self.isSync = False
@@ -53,8 +53,8 @@ class NorthRadio(NorthPort):
         while self.isSync == False and timer<timeout:
             temp = self.receive()
             if temp == None :
-                timer+=self.WAIT_TICK
-                time.sleep(self.WAIT_TICK) 
+                timer+=self.THREAD_HALT
+                time.sleep(self.THREAD_HALT) 
                 continue
             msg += temp.decode(errors='ignore')
 
@@ -179,13 +179,13 @@ class NorthRadio(NorthPort):
         """
         
         if force==True:
-            self.port.write(arr) 
-            # try:  
-            #     self.txQueue.put(block=False,item=arr)
-            # except queue.Full: pass
+            #self.port.write(arr) 
+            try:  
+                self.txQueue.put(block=False,item=arr)
+            except queue.Full: pass
         else:
             try:    
-                self.txQueue.put(block=True,item=arr,timeout=0.2)
+                self.txQueue.put(block=True,item=arr,timeout=0.1)
                 time.sleep(self.THREAD_HALT) 
             except queue.Full: print(self.com+":/> Queue Full")
 
