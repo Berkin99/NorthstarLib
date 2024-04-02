@@ -32,7 +32,7 @@ class Controller():
         if pygame.joystick.get_count() > 0:
                 self.joystick = pygame.joystick.Joystick(0)  # First Founded JOYSTICK 
                 self.joystick.init()
-                self.ctrlThread = threading.Thread(target=self.ctrlProcess,daemon=False)
+                self.ctrlThread = threading.Thread(target=self.ctrlProcess,daemon=True)
                 self.ctrlThread.start()
                 return True
         else:
@@ -42,9 +42,11 @@ class Controller():
         self.isAlive = True
         while self.isAlive:
             for event in pygame.event.get(pygame.JOYAXISMOTION):
-                for i in range(4):
-                    self.axis[i] = (int)(((self.joystick.get_axis(i)+1)*255)/2)
-            
+                self.axis[0] = (int)(((self.joystick.get_axis(0)+1)*255)/2)
+                self.axis[1] = (int)(((self.joystick.get_axis(1)+1)*255)/2)
+                self.axis[2] = (int)(((self.joystick.get_axis(2)+1)*255)/2)
+                self.axis[3] = (int)(((self.joystick.get_axis(5)+1)*255)/2)        
+            time.sleep(0.002)
             #print(self.axis)
         print("NPX:/> CTRL Process end.")
 
@@ -53,3 +55,5 @@ class Controller():
 
     def destroy(self):
         self.isAlive = False
+
+nx = Controller()

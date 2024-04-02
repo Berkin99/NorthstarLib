@@ -44,27 +44,49 @@ NTRP_Router router(&SerialUSB,&rfmodule);
 
 uint32_t counter = 0;
 bool ledvalue = HIGH;
+NTRP_Pipe_t cmd = {
+  '1',0,0,
+  {0xE7,0xE7,0xE7,0xE3,0x00},
+  {0xE7,0xE7,0xE7,0xE3,0x01},
+};
+
+NTRP_Message_t cmdmsg = {
+  '0','1', 6 ,
+  {0}
+};
+
 
 void setup() {
   pinMode(LEDPIN, OUTPUT);
+
   SERIAL_BEGIN(ROUTER_BAUD);
 
+  cmdmsg.packet.header = 3;
+  cmdmsg.packet.dataID = 0;
+  cmdmsg.packet.data.bytes[0] = 31;
+  cmdmsg.packet.data.bytes[1] = 32;
+  cmdmsg.packet.data.bytes[2] = 33;
+  cmdmsg.packet.data.bytes[3] = 34;
   /* Halt if NRF Module does not begin*/
   if(!rfmodule.begin()) while(1);
   rfmodule.setDataRate(RF24_2MBPS);
-  while(!router.sync(100)); 
+  //while(!router.sync(100)); 
 
   delay(100);
   router.debug("NTRP Router Start v.8");
+  router.openPipe(cmd);
+  //NTRP_Packet_t pack = {24,0,{0}};
+  //router.routerCOM(&pack,3);
 }
 
+NTRP_Message_t msg;
 void loop() {
-  //router.task();
-  static NTRP_Message_t msg;
   NTRP_InitMessage(&msg);
   if(router.receiveMaster(&msg)){
     router.route(&msg);
     digitalWrite(LEDPIN, ledvalue);
     ledvalue = !ledvalue; 
   }
+  //cmdmsg.packet.data.bytes[3] +=1;
+  //router.route(&cmdmsg);
 }

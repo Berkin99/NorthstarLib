@@ -122,6 +122,7 @@ class NrxTable:
 
     def setByName(self,name=str, value = any):
         nx = self.search(name)
+        if nx == None: return
         if not nx.type.group: 
             nx.value = value
             return

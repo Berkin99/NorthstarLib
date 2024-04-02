@@ -112,10 +112,10 @@ def NTRP_Parse(raw_bytearray=bytearray):
 # if error : returns None 
 # return bytearray 
 def NTRP_Unite(message=NTRPMessage):
-    arr = bytearray()
-    arr.append(ord(NTRP_STARTBYTE))
-    arr.append(ord(message.talker))
-    arr.append(ord(message.receiver))
+    arr = bytearray([ord(NTRP_STARTBYTE),ord(message.talker),ord(message.receiver)])
+    # arr.append(ord(NTRP_STARTBYTE))
+    # arr.append(ord(message.talker))
+    # arr.append(ord(message.receiver))
     
     if len(message.data)+2>NTRP_MAX_PACKET_SIZE: return None
     arr.append(len(message.data)+2)

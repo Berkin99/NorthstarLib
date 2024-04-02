@@ -28,7 +28,9 @@
 
 #include "ntrp_router.h"
 
-#define SERIAL_TIMEOUT_US    10000  /* 10 ms timeout */
+#define SERIAL_TIMEOUT_US     10000  /* 10 ms timeout */
+#define RECEIVE_TIMEOUT_US    500    /* 500 us timeout */
+
 
 NTRP_Router::NTRP_Router(SERIAL_DEF* serial_port_x, RADIO_DEF* radio){
     serial_port = serial_port_x;

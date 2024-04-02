@@ -129,11 +129,11 @@ class NorthPipe():
         self.txpck.data = databytes   
         self.transmitPacket(self.txpck)
         
-    def txCMD(self,dataID=0,channels=bytearray):
+    def txCMD(self,dataID=0,channels=bytearray,force=False):
         self.txpck = ntrp.NTRPPacket('CMD')
         self.txpck.dataID = dataID
         self.txpck.data = channels   
-        self.transmitPacket(self.txpck)
+        self.transmitPacket(self.txpck,force=force)
 
     def printID(self,msg=str):
         print(self.radio.com + ":/" + self.id + "> " + msg)

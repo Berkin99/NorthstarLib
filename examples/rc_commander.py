@@ -15,19 +15,17 @@ if __name__ == '__main__':
     ctrl = ncmd.Controller() #Joystick controller
     time.sleep(1)
     
+    uavcom = NorthNRF(address="E7E7E7E301")
 
-    rf_pipe = NorthNRF(0,0,address="E7E7E7E301") 
-    print("RF Radio ID = " + str(ord(rf_pipe.id)))
-    
-    rf_pipe.txFULLTX()
-
-    while 1: 
+    while uavcom.radio.isRadioAlive(): 
         if ctrl.isAlive == False : break
-        rf_pipe.txCMD(channels=ctrl.getAxis())
-        if not rf_pipe.radio.isRadioAlive(): break
+        uavcom.txCMD(channels=ctrl.getAxis(),force=True)
+        time.sleep(0.001)
 
     ctrl.destroy()
+    uavcom.destroy()
+
     radioManager.closeAvailableRadios()
-    
     print("app exit")
+    time.sleep(0.1)
     sys.exit()

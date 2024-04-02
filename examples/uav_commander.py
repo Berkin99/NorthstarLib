@@ -10,7 +10,6 @@ from northlib.ncmd.nrxtable import NrxTableLog
 
 uri = "radio:/0/76/2/E7E7E7E301"
 
-
 if __name__ == '__main__':
 
     radioManager.radioSearch(baud=2000000) #Arduino DUE (USB Connection) has no Baudrate

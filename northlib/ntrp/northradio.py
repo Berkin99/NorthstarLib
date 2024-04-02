@@ -37,7 +37,7 @@ class NorthRadio(NorthPort):
     DEFAULT_BAUD = 115200
    
     WAIT_TICK     = 0.001     #1 ms  Wait Tick (Do not Change)
-    TRANSMIT_HALT = 0.01      #10 ms Transmit Stop (Can changable)
+    THREAD_HALT   = 0.010     #10 ms Thread Stop (Can changable)
      
     def __init__(self, com=None , baud=DEFAULT_BAUD):
         super().__init__(com, baud)
@@ -122,7 +122,9 @@ class NorthRadio(NorthPort):
         while self.isAlive and self.mode!=self.NO_CONNECTION:
             byt = None
             byt = self.receive()
-            if byt == None: continue
+            if byt == None:
+                time.sleep(self.WAIT_TICK) 
+                continue
             if byt != ntrp.NTRP_STARTBYTE.encode(): continue
             
             arr = bytearray(byt)
@@ -175,12 +177,16 @@ class NorthRadio(NorthPort):
         ntrp.NTRP_LogMessage(msg)
         print(ntrp.NTRP_bytes(arr))
         """
-        if force==True: 
-            self.port.write(arr)
+        
+        if force==True:
+            self.port.write(arr) 
+            # try:  
+            #     self.txQueue.put(block=False,item=arr)
+            # except queue.Full: pass
         else:
             try:    
                 self.txQueue.put(block=True,item=arr,timeout=0.2)
-                time.sleep(self.TRANSMIT_HALT) 
+                time.sleep(self.THREAD_HALT) 
             except queue.Full: print(self.com+":/> Queue Full")
 
     def txProcess(self):
@@ -188,9 +194,10 @@ class NorthRadio(NorthPort):
             arr = self.txQueue.get()
             if arr != None:
                 self.transmit(arr)
-                time.sleep(self.TRANSMIT_HALT) #Transmit can't speed up to infinity
+                time.sleep(self.THREAD_HALT) #Transmit can't speed up to infinity
                 self.txQueue.task_done()
-
+            else:
+                time.sleep(self.WAIT_TICK)
 
     def destroy(self):
         self.isAlive = False
