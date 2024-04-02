@@ -37,7 +37,7 @@ class NorthRadio(NorthPort):
     DEFAULT_BAUD = 115200
    
     WAIT_TICK     = 0.001     #1 ms  Wait Tick (Do not Change)
-    THREAD_HALT   = 0.01      #10 ms Thread Stop (Can changable)
+    THREAD_SLEEP   = 0.01      #10 ms Thread Stop (Can changable)
     
     def __init__(self, com=None , baud=DEFAULT_BAUD):
         super().__init__(com, baud)
@@ -53,8 +53,8 @@ class NorthRadio(NorthPort):
         while self.isSync == False and timer<timeout:
             temp = self.receive()
             if temp == None :
-                timer+=self.THREAD_HALT
-                time.sleep(self.THREAD_HALT) 
+                timer+=self.THREAD_SLEEP
+                time.sleep(self.THREAD_SLEEP) 
                 continue
             msg += temp.decode(errors='ignore')
 
@@ -186,7 +186,7 @@ class NorthRadio(NorthPort):
         else:
             try:    
                 self.txQueue.put(block=True,item=arr,timeout=0.1)
-                time.sleep(self.THREAD_HALT) 
+                time.sleep(self.THREAD_SLEEP) 
             except queue.Full: print(self.com+":/> Queue Full")
 
     def txProcess(self):
@@ -194,7 +194,7 @@ class NorthRadio(NorthPort):
             arr = self.txQueue.get()
             if arr != None:
                 self.transmit(arr)
-                time.sleep(self.THREAD_HALT) #Transmit can't speed up to infinity
+                time.sleep(self.THREAD_SLEEP) #Transmit can't speed up to infinity
                 self.txQueue.task_done()
             else:
                 time.sleep(self.WAIT_TICK)

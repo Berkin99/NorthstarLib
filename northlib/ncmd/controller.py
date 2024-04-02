@@ -41,7 +41,7 @@ class Controller():
         if pygame.joystick.get_count() > 0:
                 self.joystick = pygame.joystick.Joystick(0)  # First Founded JOYSTICK 
                 self.joystick.init()
-                self.ctrlThread = threading.Thread(target=self.ctrlProcess,daemon=False)
+                self.ctrlThread = threading.Thread(target=self.ctrlProcess,daemon=True)
                 self.ctrlThread.start()
                 return True
         else:
@@ -50,7 +50,6 @@ class Controller():
     def ctrlProcess(self):
         self.isAlive = True
         while self.isAlive:
-            self.battery = self.joystick.get_power_level()
             for event in pygame.event.get(pygame.JOYAXISMOTION):
                 self.axis[0] = int(((self.joystick.get_axis(1)+1)*255)/2)
                 self.axis[1] = int(((self.joystick.get_axis(0)+1)*255)/2)
@@ -61,7 +60,6 @@ class Controller():
                 self.dynChannel.calculate(self.axis[3],self.axis[4],self.THREAD_SLEEP)
             time.sleep(self.THREAD_SLEEP)
             print(self.getAxisRaw())
-            # print(self.battery)
 
         print("NPX:/> CTRL Process end.")
 
@@ -86,7 +84,7 @@ class Dynamo:
     CH_MAX = 255
     CH_MIN = 0
     MELTPOINT = 10
-    CF_MELT = 2
+    CF_MELT = 1
     
     def __init__(self,throttle_ps=1.0, break_ps=1.4):
         self.throttle_ps = throttle_ps
@@ -100,7 +98,7 @@ class Dynamo:
         self.chval -= ch_b*self.break_ps*dt
         
         if ch_t<self.MELTPOINT: 
-            self.energy -= self.energy *dt*2
+            self.energy -= self.energy *dt
             self.chval -= self.energy*dt
             self.chval -= self.CF_MELT * dt
         else : self.energy = (self.chval*dt)+(self.energy*(1-dt))
@@ -109,4 +107,3 @@ class Dynamo:
         elif self.chval > self.CH_MAX : self.chval = self.CH_MAX
         return self.chval
     
-nx = Controller(True)
