@@ -59,7 +59,7 @@ class Controller():
             if self.dynamic:
                 self.dynChannel.calculate(self.axis[3],self.axis[4],self.THREAD_SLEEP)
             time.sleep(self.THREAD_SLEEP)
-            print(self.getAxisRaw())
+            #print(self.getAxisRaw())
 
         print("NPX:/> CTRL Process end.")
 

@@ -13,7 +13,7 @@ if __name__ == '__main__':
     radioManager.radioSearch(baud=2000000) #Arduino DUE (USB Connection) has no Baudrate
     if not len(radioManager.availableRadios) > 0: sys.exit()
 
-    #ctrl = ncmd.Controller() #Joystick controller
+    ctrl = ncmd.Controller(True) #Joystick controller
     time.sleep(1)
     
     uavcom = NorthNRF(address="E7E7E7E301")
@@ -22,11 +22,11 @@ if __name__ == '__main__':
         if uavcom.radio.isRadioAlive()==False : break 
         #if ctrl.isAlive == False : break
 
-        #uavcom.txCMD(channels=ctrl.getAxis(),force=True)
+        uavcom.txCMD(channels=ctrl.getAxis(),force=True)
         time.sleep(0.05)
 
 
-    #ctrl.destroy()
+    ctrl.destroy()
     uavcom.destroy()
     radioManager.closeAvailableRadios()
     
