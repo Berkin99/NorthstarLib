@@ -25,7 +25,7 @@ class Controller():
     
     def __init__(self,dynamic=False):
         self.isAlive = False
-        self.axis = [0,0,0,0,0]
+        self.axis = [0,0,0,0,0,0] # x : y : z : throttle : break : HZ 
         self.battery = 1
         self.dynamic = dynamic
         if dynamic:
@@ -33,6 +33,7 @@ class Controller():
 
         pygame.init()
         pygame.joystick.init()
+
         if not self.findController(): 
             print("NPX:/> Joystick Not Found.")
         
@@ -58,16 +59,23 @@ class Controller():
                 self.axis[4] = int(((self.joystick.get_axis(4)+1)*255)/2) #Break
             if self.dynamic:
                 self.dynChannel.calculate(self.axis[3],self.axis[4],self.THREAD_SLEEP)
+            
+            for event in pygame.event.get(pygame.JOYBUTTONDOWN):
+                self.axis[5] = int(self.joystick.get_button(9))
+            for event in pygame.event.get(pygame.JOYBUTTONUP):
+                self.axis[5] = int(self.joystick.get_button(9))
+
             time.sleep(self.THREAD_SLEEP)
-            #print(self.getAxisRaw())
+            # print(self.getAxisRaw())
 
         print("NPX:/> CTRL Process end.")
 
     def getAxisRaw(self):
         if not self.dynamic:
             return self.axis[0:4]
-        arr =  self.axis[0:3]
-        arr.append(int(self.dynChannel.chval))
+        arr =  self.axis[0:3] # x : y : z [0,255]
+        arr.append(int(self.dynChannel.chval)) # power [0,255]
+        arr.append(int(self.axis[5]))
         return arr
     
     def getAxis(self):
@@ -106,4 +114,4 @@ class Dynamo:
         if self.chval < self.CH_MIN : self.chval = self.CH_MIN
         elif self.chval > self.CH_MAX : self.chval = self.CH_MAX
         return self.chval
-    
+
