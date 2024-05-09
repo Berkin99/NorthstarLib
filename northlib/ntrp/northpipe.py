@@ -39,6 +39,7 @@ class NorthPipe():
 
         # LORA >
         # The Pipe ID is should be same with target agent ID
+        
         # RF DONGLE >
         # Agent ID is represents the rf adress when use NTRP_Router Dongle
         # Agent ID identifies the target agent when use UART Lora Module
@@ -97,7 +98,7 @@ class NorthPipe():
             if rxCallBack == None: self.printID("receivePacket Error : " + rxPacket.header.name + " Header CallBack is None")
             else : rxCallBack(rxPacket)
 
-    def rxMSG(self,ntrpmsg=NTRPMessage()):
+    def rxMSG(self, ntrpmsg = NTRPMessage()):
         pass #Radio Prints Already
         #self.printID(ntrpmsg.data.decode('ascii',errors='ignore'))
 

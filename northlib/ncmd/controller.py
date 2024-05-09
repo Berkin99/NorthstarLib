@@ -114,4 +114,7 @@ class Dynamo:
         if self.chval < self.CH_MIN : self.chval = self.CH_MIN
         elif self.chval > self.CH_MAX : self.chval = self.CH_MAX
         return self.chval
+    
+
+
 

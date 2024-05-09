@@ -12,6 +12,7 @@ import time
 from northlib.ntrp.northpipe import NorthNRF
 from northlib.ntrp.ntrpbuffer import NTRPBuffer
 from northlib.ncmd.nrxtable import NrxTable
+from northlib.ncmd.nrxtable import NrxTableLog
 
 import northlib.ncmd.nrx as nrx
 import northlib.ntrp.ntrp as ntrp
@@ -37,19 +38,23 @@ class NorthCOM(NorthNRF):
         self.uri = uri
         part = uri.split('/')
         super().__init__(int(part[1]),int(part[2]),int(part[3]),part[4])
-        
+
+        #Set UAVCOM Based Callback Functions        
         self.setCallBack(ntrp.NTRPHeader_e.ACK,self.rxACK)
         self.setCallBack(ntrp.NTRPHeader_e.NAK,self.rxNAK)
         self.setCallBack(ntrp.NTRPHeader_e.SET,self.rxSET)
         self.setCallBack(ntrp.NTRPHeader_e.LOG,self.rxSET)
-        self.setCallBack(ntrp.NTRPHeader_e.CMD,self.rxCMD)
-        
+        self.setCallBack(ntrp.NTRPHeader_e.CMD,self.rxCMD)        
+        self.setCallBack(ntrp.NTRPHeader_e.MSG,self.rxMSG)
+        #Default mode : Received value handled by callback functions
         self.setRxHandleMode(self.RX_HANDLE_MODE_CALLBACK)
+        #Set Dongle to Transceiver Mode
         self.txTRX()
 
         self.connection = False
         self.paramtable = NrxTable()
 
+    """ ACK Request to Sended MESSAGE """
     def connect(self,timeout = 30):
         rettime = self.waitConnection(timeout)
         if rettime > 0 : 
@@ -57,6 +62,7 @@ class NorthCOM(NorthNRF):
             self.connection = True
         else: self.connection = False
 
+    """ NRX Table Synchronisation """
     def synchronize(self):
         self.setRxHandleMode(self.RX_HANDLE_MODE_BUFFER)
         i=0
@@ -77,6 +83,7 @@ class NorthCOM(NorthNRF):
             self.paramtable.tableAppend(msg.data)
             i+=1
 
+        NrxTableLog(self.paramtable)
         self.setRxHandleMode(self.RX_HANDLE_MODE_CALLBACK)
 
     def getParamTable(self):

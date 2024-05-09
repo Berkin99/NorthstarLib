@@ -134,6 +134,6 @@ class NrxTable:
 
 
 
-def NrxTableLog(table):
+def NrxTableLog(table = NrxTable()):
     for i in range(len(table.table)):
         nrx.NrxLog(table.table[i])
