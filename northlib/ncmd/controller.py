@@ -57,13 +57,14 @@ class Controller():
                 self.axis[2] = 254 - int(((self.joystick.get_axis(2)+1)*255)/2)
                 self.axis[3] = int(((self.joystick.get_axis(5)+1)*255)/2) #Throttle
                 self.axis[4] = int(((self.joystick.get_axis(4)+1)*255)/2) #Break
-            if self.dynamic:
-                self.dynChannel.calculate(self.axis[3],self.axis[4],self.THREAD_SLEEP)
             
             for event in pygame.event.get(pygame.JOYBUTTONDOWN):
                 self.axis[5] = int(self.joystick.get_button(9))
             for event in pygame.event.get(pygame.JOYBUTTONUP):
                 self.axis[5] = int(self.joystick.get_button(9))
+
+            if self.dynamic and self.axis[5]==0:
+                self.dynChannel.calculate(self.axis[3],self.axis[4],self.THREAD_SLEEP)
 
             time.sleep(self.THREAD_SLEEP)
             # print(self.getAxisRaw())
@@ -115,6 +116,12 @@ class Dynamo:
         elif self.chval > self.CH_MAX : self.chval = self.CH_MAX
         return self.chval
     
+
+# print("REMOVE TESTING PRINT")
+# test = Controller(True)
+# while 1:
+#     pass
+
 
 
 

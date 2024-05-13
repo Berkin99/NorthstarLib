@@ -30,7 +30,7 @@ if __name__ == '__main__':
         if ctrl.isAlive == False : break
         uavcom.txCMD(channels=ctrl.getAxis(),force=True)
         time.sleep(0.02)
-        # value = uavcom.GET("position.z")
+        # value = uavcom.GET("quad.throttle")
         # print(value)
 
     ctrl.destroy()
