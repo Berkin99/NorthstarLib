@@ -19,6 +19,7 @@ import northlib.ntrp.ntrp as ntrp
 __author__ = 'Yeniay RD'
 __all__ = ['Nrx','NrxType_e','NrxType']
 
+
 NRX_BYTES_MASK  = 0x03
 NRX_1BYTE       = 0x00
 NRX_2BYTES      = 0x01
@@ -64,10 +65,7 @@ class NrxType_e(Enum):
     GROUPSTOP  = 8
 
 class NrxType():
-    """
-    NRX Type
-    * @rawtype =   
-    """
+
     def __init__(self,rawtype):
         self.varType  = nrx.NrxTypeParse(rawtype)
         self.varBytes = 2**(rawtype&NRX_BYTES_MASK)

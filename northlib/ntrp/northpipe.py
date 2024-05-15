@@ -35,14 +35,16 @@ class NorthPipe():
     RX_HANDLE_MODE_CALLBACK = 1
 
     def __init__(self, pipe_id = '1', radio = NorthRadio):
-        self.id = pipe_id                    # Agent ID
-
-        # LORA >
-        # The Pipe ID is should be same with target agent ID
         
-        # RF DONGLE >
-        # Agent ID is represents the rf adress when use NTRP_Router Dongle
-        # Agent ID identifies the target agent when use UART Lora Module
+        """                
+        LORA >
+        The Pipe ID is should be same with target agent ID
+        
+        RF DONGLE >
+        Agent ID is represents the rf adress when use NTRP_Router Dongle
+        Agent ID identifies the target agent when use UART Lora Module
+        """
+        self.id = pipe_id                    # Agent ID 
         
         self.radio = radio    
         self.radio.subPipe(pipe=self)  #Subscribe to Radio
@@ -60,9 +62,11 @@ class NorthPipe():
             NTRPHeader_e.LOG:None,
             NTRPHeader_e.RUN:None
         }
-
+        
         self.setCallBack(NTRPHeader_e.MSG,self.rxMSG)
-            
+
+        self.lastConnection = 0.0 #Last Connection Unix Time 
+
     def setCallBack(self, header=NTRPHeader_e, callback=callable):
         #Data Ready Callback function 
         #It blocks radio rxThread : keep it small 
@@ -96,7 +100,9 @@ class NorthPipe():
         elif self.rxHandleMode == self.RX_HANDLE_MODE_CALLBACK:
             rxCallBack = self.rxCallBack.get(rxPacket.header)
             if rxCallBack == None: self.printID("receivePacket Error : " + rxPacket.header.name + " Header CallBack is None")
-            else : rxCallBack(rxPacket)
+            else : 
+                rxCallBack(rxPacket)
+                self.lastConnection = time.time()
 
     def rxMSG(self, ntrpmsg = NTRPMessage()):
         pass #Radio Prints Already

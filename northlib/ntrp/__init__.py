@@ -21,6 +21,22 @@ import serial
 import serial.tools.list_ports
 import time
 
+"""
+    NRTP Protocol and NRTP Library created for 
+    communication between computer and embedded systems.
+
+    NRTP Protocol supports node based communication.
+    Routers are wireless communication dongles that can
+    both transmits and receives the data from other nodes.
+
+    USAGE 1 Dongle(Router) : 
+    [PC] <--- USB ---> [DONGLE]-[RF] <   RF   > [NODE1,NODE2...]
+
+    USAGE 2 LORA: 
+    [PC] <--- UART ---> [LORA] <  LORA  > [NODE1,NODE2...]
+
+"""
+
 availableRadios = []
 
 def radioSearch(baud=115200):
