@@ -36,12 +36,11 @@ if __name__ == '__main__':
 
     uavtable = uavcom.getParamTable()
     
-    #LOOP HERE
-
     lp = LivePlot(0,100,100)
     print("Plotter Started")
 
     while 1:
+
         NrxTableLog(uavtable) # Print The NRX Table
         
         nrx_valid = False

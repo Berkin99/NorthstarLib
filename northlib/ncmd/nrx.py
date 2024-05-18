@@ -164,8 +164,9 @@ def NrxValueUnite (value,vartype)->bytes:
     return parser.get(vartype)(value)
 
 
-def NrxLog (nx)->None:
+def NrxLog (nx , detail = False)->None:
     """ Prints the nrx values """
-
-    print("[" + str(nx.index) + "] : " + nx.type.varType.name + " : " + str(nx.name) + " : " + str(nx.value))
-
+    if(detail):
+        print("[" + str(nx.index) + "] " + nx.type.varType.name + " : " + str(nx.name) + " : " + str(nx.value))
+    else:
+        print("[" + str(nx.index) + "] " + str(nx.name) + " : " + str(nx.value))
