@@ -46,16 +46,16 @@ agents with single radio. It can use with LORA or NRF types of dongle
 There is two types of payload. NTRP Package and the helper wrapped version 
 of package as NTRP Message.
 
-* NTRP Package : |Header|DataId|Data1|Data2|...|DataN|
-* NTRP Message : |'*'|TalkerID|ReceiverID|PackageLen|<NTRP_Package>|'\n'|
+* NTRP Package : [Header][DataId][Data1][Data2][...][DataN]
+* NTRP Message : ['*'][TalkerID][ReceiverID][PackageLen][<NTRP_Package>]['\n']
 
 #### Header:
-> Get variable 
-> Set variable  
-> Run function 
-> Log request 
-> Specializable Commands
-> Carry debug messages
+* Get variable 
+* Set variable  
+* Run function 
+* Log request 
+* Specializable Commands
+* Carry debug messages
 
 
 ### NorthPipe
