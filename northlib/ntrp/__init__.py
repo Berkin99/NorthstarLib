@@ -30,16 +30,22 @@ import time
     both transmits and receives the data from other nodes.
 
     USAGE 1 Dongle(Router) : 
-    [PC] <--- USB ---> [DONGLE]-[RF] <   RF   > [NODE1,NODE2...]
+    [PC] <--- USB ---> [DONGLE] <--- SPI ---> [RF] <   RF   > [NODE1, NODE2...]
 
     USAGE 2 LORA: 
-    [PC] <--- UART ---> [LORA] <  LORA  > [NODE1,NODE2...]
+    [PC] <--- USB ---> [USB TO UART CONVERTER] <--- UART ---> [LORA] <  LORA  > [NODE1, NODE2...]
 
 """
 
 availableRadios = []
 
+
 def radioSearch(baud=115200):
+    """
+    Search available ntrp radios connected to PC
+    Radio objects stored  @availableRadios[] 
+    """
+
     #Radio Search closes all radios in the list
     closeAvailableRadios()
     coms = NorthPort.getAvailablePorts()
@@ -66,7 +72,7 @@ def closeAvailableRadios():
     print("RadioManager:/> All radios closed.")
 
 def getRadio(index=int)->NorthRadio:
-    if index>=len(availableRadios) or index < 0: raise ValueError
+    if index >= len(availableRadios) or index < 0: raise ValueError
     return availableRadios[index]
 
 def getAvailableRadios():

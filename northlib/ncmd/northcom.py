@@ -69,11 +69,14 @@ class NorthCOM(NorthNRF):
         miss = 0
         self.rxbuffer.flush()
         while 1:
-            self.txCMD(dataID=self.CMD_PARAM_CONTENT,channels=bytearray([i]))
+            self.txCMD(dataID = self.CMD_PARAM_CONTENT, channels = bytearray([i]))
             time.sleep(0.01)
-            if self.rxbuffer.isAvailable()<1:
-                miss+=1 
-                if miss > 50: self.printID("Too much missing command! : " + str(miss))
+            if self.rxbuffer.isAvailable() < 1:
+                miss += 1 
+                if miss > 50: 
+                    self.printID("Too much missing command! : " + str(miss))
+                    self.printID("Synchronisation Fail")
+                    break
                 continue
 
             msg = self.rxbuffer.read()
