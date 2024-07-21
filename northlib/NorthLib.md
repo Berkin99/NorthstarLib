@@ -1,5 +1,5 @@
 
-# NORTHLIB API
+# **NORTHLIB API**
 
 **Northlib** is a communication protocol administrator for communicating embedded
 devices with PC.
@@ -33,8 +33,8 @@ variable or function address.
 [NTRP] sublibrary classes:
 
 * NTRP
-    > **NTRPPacket**  : Northstar Radio Protocol Packet type Payload
-    > **NTRPMessage** : Northstar Radio Protocol Message type Payload.
+    * **NTRPPacket**  : Northstar Radio Protocol Packet type Payload
+    * **NTRPMessage** : Northstar Radio Protocol Message type Payload.
 * NorthPort : Serial communication provider 
 * NorthRadio(NorthPort) : Telemetry Dongle Proxy 
 * NorthPipe : Opened router pipes under NorthRadio.  Communicate  multiple
