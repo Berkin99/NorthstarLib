@@ -50,7 +50,7 @@ class NTRPPacket():
         self.header  = NTRPHeader_e.ACK
         self.setHeader(headername=header)
         self.dataID  = dataID       #data id or pipeno
-        self.data    = bytearray()         #payload
+        self.data    = bytearray()  #payload
 
     #Set Header With Name
     def setHeader(self,headername):
@@ -77,18 +77,18 @@ class NTRPMessage(NTRPPacket):
         self.data   = packet.data
         
 # @param raw_bytearray = bytearray
-# if error : returns None 
+# @error : returns None 
 # return NTRPMessage 
-def NTRP_Parse(raw_bytearray=bytearray):
+def NTRP_Parse(raw_bytearray = bytearray):
     if chr(raw_bytearray[0]) != NTRP_STARTBYTE : return None
     msg = NTRPMessage()
-    msg.talker   = chr(raw_bytearray[1])
-    msg.receiver = chr(raw_bytearray[2])
+    msg.talker     = chr(raw_bytearray[1])
+    msg.receiver   = chr(raw_bytearray[2])
     msg.packetsize = int(raw_bytearray[3])
 
     msg.data = bytearray()
 
-    if (msg.packetsize<2 or msg.packetsize>NTRP_MAX_PACKET_SIZE) : return None 
+    if (msg.packetsize < 2 or msg.packetsize > NTRP_MAX_PACKET_SIZE) : return None 
     datasize = msg.packetsize-2
 
     found = 0
@@ -97,27 +97,24 @@ def NTRP_Parse(raw_bytearray=bytearray):
             msg.header = header
             found = 1
             break
-    if found==0: return None
+    if found == 0: return None
 
     msg.dataID = int(raw_bytearray[5])
     
-    if(msg.header==NTRPHeader_e.MSG.value): datasize = msg.dataID
+    if(msg.header == NTRPHeader_e.MSG.value): datasize = msg.dataID
     for i in range(datasize):
-        msg.data.append(raw_bytearray[i+6])
+        msg.data.append(raw_bytearray[i + 6])
 
-    if chr(raw_bytearray[msg.packetsize+4]) != NTRP_ENDBYTE : return None
+    if chr(raw_bytearray[msg.packetsize + 4]) != NTRP_ENDBYTE : return None
     return msg
 
 # @param message = NTRPMessage
 # if error : returns None 
 # return bytearray 
-def NTRP_Unite(message=NTRPMessage):
+def NTRP_Unite(message = NTRPMessage):
     arr = bytearray([ord(NTRP_STARTBYTE),ord(message.talker),ord(message.receiver)])
-    # arr.append(ord(NTRP_STARTBYTE))
-    # arr.append(ord(message.talker))
-    # arr.append(ord(message.receiver))
-    
-    if len(message.data)+2>NTRP_MAX_PACKET_SIZE: return None
+
+    if len(message.data)+2 > NTRP_MAX_PACKET_SIZE: return None
     arr.append(len(message.data)+2)
     
     #NTRP_Packet_t

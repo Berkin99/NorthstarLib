@@ -39,8 +39,8 @@ NRX_RONLY 	= (1<<6)
 NRX_START = 1
 NRX_STOP  = 0
 
-NRX_VARIABLE= (0x00<<7)
-NRX_GROUP   = (0x01<<7)
+NRX_VARIABLE = (0x00<<7)
+NRX_GROUP    = (0x01<<7)
 
 NRX_PERSISTENT =(1<<8)
 
@@ -72,8 +72,8 @@ class NrxType():
         self.readOnly = False
         self.group    = False
       
-        if rawtype&NRX_RONLY: self.readOnly = True
-        if rawtype&NRX_GROUP: self.group = True
+        if rawtype & NRX_RONLY: self.readOnly = True
+        if rawtype & NRX_GROUP: self.group = True
 
 class Nrx:
     """
@@ -118,11 +118,11 @@ def NrxParse(rawarray = bytearray)->Nrx:
 def NrxTypeParse (rawtype):
     """ Rawtype(byte) to NrxType_e """
 
-    if rawtype&NRX_GROUP:
-        if rawtype&NRX_START: return NrxType_e.GROUPSTART
+    if rawtype & NRX_GROUP:
+        if rawtype & NRX_START: return NrxType_e.GROUPSTART
         return NrxType_e.GROUPSTOP
 
-    if rawtype&NRX_TYPE_FLOAT: return NrxType_e.FLOAT
+    if rawtype & NRX_TYPE_FLOAT: return NrxType_e.FLOAT
 
     bytesize = 2**(rawtype&NRX_BYTES_MASK)
 

@@ -1,8 +1,8 @@
 
 # **NORTHLIB API**
 
-**Northlib** is a communication protocol administrator for communicating embedded
-devices with PC.
+**Northlib** is a wireless communication protocol supervisor for communicating 
+external embedded devices with PC.
 
 #### System Elements: 
 * Command Station : Northlib worker, Computer (PC) 
@@ -57,8 +57,20 @@ of package as NTRP Message.
 * Specializable Commands
 * Carry debug messages
 
+### NTRP/NorthPort
+Northport is a Serial COM wrapper. It uses pyserial for general usb applications
+Can be customized for different types of PC-Dongle communication applications.
 
-### NorthPipe
+### NTRP/NorthRadio
+Proxy of connected RF Dongle.
+
+Northradio Services: 
+* Searches for NRF dongles in the USB ports and sync with it.
+* Parses and Routes received **bytearray** data to related pipe as NTRPPacket. 
+* Gets NTRPPacket as input and unites to **bytearray** for transmission
+* Can be customized for multi Commander applicatons.
+
+### NTRP/NorthPipe
 
 USAGE 1 Dongle(Router) : 
 [PC] <--- USB ---> [DONGLE] <--- SPI ---> [RF] <   RF   > [NODE1,NODE2...]

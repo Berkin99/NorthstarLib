@@ -65,7 +65,7 @@ class NorthCOM(NorthNRF):
     """ NRX Table Synchronisation """
     def synchronize(self):
         self.setRxHandleMode(self.RX_HANDLE_MODE_BUFFER)
-        i=0
+        i = 0
         miss = 0
         self.rxbuffer.flush()
         while 1:
