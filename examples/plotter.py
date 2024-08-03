@@ -58,7 +58,7 @@ if __name__ == '__main__':
             time.sleep(0.01)
             
             value = uavcom.GET(getval)        
-            lp.add_data(value)    
+            # lp.add_data(value)    
             print(value)
 
     uavcom.destroy()

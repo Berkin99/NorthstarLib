@@ -32,22 +32,13 @@ if __name__ == '__main__':
     uavcom.synchronize()
     
     time.sleep(1)
-    
-    vector = uavcom.GET("vector")
-    print(vector)
+    NrxTableLog(uavcom.paramtable)
 
-    uavcom.SET("vector",[31,62,93])
-    time.sleep(1)
-    
-    vector = uavcom.GET("vector")
-    print(vector)
-    
-    nx = uavcom.paramtable.search("vector")
-
+    time.sleep(5)
     while uavcom.radio.isRadioAlive():
-        uavcom.txGET(nx.index)
-        NrxTableLog(uavcom.paramtable)
-        time.sleep(1)
+        vector = uavcom.GET("position.z")
+        print(vector)
+        time.sleep(0.01)
     
     uavcom.destroy()
     radioManager.closeAvailableRadios()
