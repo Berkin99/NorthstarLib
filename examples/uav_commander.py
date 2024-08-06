@@ -36,7 +36,7 @@ if __name__ == '__main__':
 
     time.sleep(5)
     while uavcom.radio.isRadioAlive():
-        vector = uavcom.GET("position.z")
+        vector = uavcom.GET("system.adc")
         print(vector)
         time.sleep(0.01)
     

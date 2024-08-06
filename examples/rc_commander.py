@@ -19,7 +19,7 @@ import northlib.ncmd.controller as ncmd
 
 if __name__ == '__main__':
 
-    radioManager.radioSearch(baud=2000000) #Arduino DUE (USB Connection) has no Baudrate
+    radioManager.radioSearch(baud = 2000000) #Arduino DUE (USB Connection) has no Baudrate
     if not len(radioManager.availableRadios) > 0: sys.exit()
 
     ctrl = ncmd.Controller(True) #Joystick controller

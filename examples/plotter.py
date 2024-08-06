@@ -49,21 +49,24 @@ if __name__ == '__main__':
             if (uavtable.search(getval) != None):
                 nrx_valid = True
 
-        minlp = int(input("> Enter min value: _"))
-        maxlp = int(input("> Enter max value: _"))
+        minlp = -1
+        maxlp =  1
+        minstr = input("> Enter min value: _")
+        maxstr = input("> Enter max value: _")
+        if minstr != '': minlp = int(minstr)
+        if maxstr != '': maxlp = int(maxstr)
         lp.set_lims(minlp,maxlp)
 
         while not keyboard.is_pressed('esc'):
             if uavcom.radio.isRadioAlive()==False : break 
-            time.sleep(0.01)
-            
+            # time.sleep(0.01)            
             value = uavcom.GET(getval)        
-            # lp.add_data(value)    
+            lp.add_data(value)    
             print(value)
 
     uavcom.destroy()
     radioManager.closeAvailableRadios()
-
+    
     print("Plotter app exit")
     time.sleep(0.1)
     sys.exit()
