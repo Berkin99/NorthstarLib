@@ -8,65 +8,59 @@
 #   2024 Yeniay Uav Flight Control Systems
 #   Research and Development Team
 
-import time
 import sys
 sys.path.append('./')
 
+import time
 import northlib.ntrp as radioManager
 from   northlib.ntrp.northpipe import NorthPipe,NorthNRF
 import northlib.ntrp.ntrp as ntrp
-from northlib.ncmd.northcom import NorthCOM
-from northlib.ncmd.nrxtable import NrxTableLog
-
-from livePlot import LivePlot
+import northlib.ncmd.controller as ncmd
+from   northlib.ncmd.northcom import NorthCOM
+from   northlib.ncmd.nrxtable import NrxTableLog
 import keyboard
 
 uri =  "radio:/0/76/2/E7E7E7E301"
 
+def uavctrlTask(uavcom):
+    while 1:
+        uavcom.txCMD(channels=ctrl.getAxis(),force=True)
+        time.sleep(0.02)
+
 if __name__ == '__main__':
 
-    radioManager.radioSearch(baud=2000000)    #(USB Connection) has no Baudrate
+    radioManager.radioSearch(baud=2000000)    #Arduino DUE (USB Connection) has no Baudrate
     if not len(radioManager.availableRadios) > 0: sys.exit()
 
+    ctrl = ncmd.Controller(True) #Joystick controller
     time.sleep(1)
-    
+    if ctrl.isAlive == False : sys.exit()
+
     uavcom = NorthCOM(uri=uri)
     uavcom.connect()        # Request ACK to sended MSG
     uavcom.synchronize()    # Syncronize the NRX Table
 
+    # ctrl.callBack = lambda x : uavcom.txCMD(channels=x, force= True)
     uavtable = uavcom.getParamTable()
-    
-    lp = LivePlot(0,100,100)
-    print("Plotter Started")
 
     while 1:
-
-        NrxTableLog(uavtable) # Print The NRX Table
-        
         nrx_valid = False
         while (not nrx_valid):
             getval = input("> Enter Log Value: ")
-            if (uavtable.search(getval) != None):
-                nrx_valid = True
+            if (uavtable.search(getval) != None): nrx_valid = True
 
-        minlp = -1
-        maxlp =  1
-        minstr = input("> Enter min value: _")
-        maxstr = input("> Enter max value: _")
-        if minstr != '': minlp = int(minstr)
-        if maxstr != '': maxlp = int(maxstr)
-        lp.set_lims(minlp,maxlp)
-
-        while not keyboard.is_pressed('esc'):
-            if uavcom.radio.isRadioAlive()==False : break 
-            # time.sleep(0.01)
+        while 1:
+            if uavcom.radio.isRadioAlive() == False : break
+            if keyboard.is_pressed('esc') : break 
+            time.sleep(0.01)
             value = uavcom.GET(getval)        
-            lp.add_data(value)    
             print(value)
 
+        NrxTableLog(uavtable) # Print The NRX Table
+
+    ctrl.destroy()
     uavcom.destroy()
     radioManager.closeAvailableRadios()
     
-    print("Plotter app exit")
-    time.sleep(0.1)
+    print("UAV COMMANDER EXIT")
     sys.exit()

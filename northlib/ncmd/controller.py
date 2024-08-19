@@ -11,7 +11,6 @@
 import threading
 import pygame
 import time
-import math
 
 __author__ = 'Yeniay RD'
 __all__ = ['Controller','Dynamo']
@@ -21,7 +20,7 @@ class Controller():
     NTRP Joystick Controller
     Dynamic Throttle 
     """
-    THREAD_SLEEP = 0.002
+    THREAD_SLEEP = 0.05
     
     def __init__(self,dynamic=False):
         self.isAlive = False
@@ -33,6 +32,8 @@ class Controller():
 
         pygame.init()
         pygame.joystick.init()
+        
+        self.callBack = None
 
         if not self.findController(): 
             print("NPX:/> Joystick Not Found.")
@@ -67,6 +68,8 @@ class Controller():
                 self.dynChannel.calculate(self.axis[3],self.axis[4],self.THREAD_SLEEP)
 
             time.sleep(self.THREAD_SLEEP)
+
+            if(self.callBack != None): self.callBack(self.getAxis())
             # print(self.getAxisRaw())
 
         print("NPX:/> CTRL Process end.")

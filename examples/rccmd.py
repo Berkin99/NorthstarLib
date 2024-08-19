@@ -36,7 +36,7 @@ if __name__ == '__main__':
     ctrl.destroy()
     uavcom.destroy()
     radioManager.closeAvailableRadios()
-    
+
     print("rc commander exit")
     time.sleep(0.1)
     sys.exit()

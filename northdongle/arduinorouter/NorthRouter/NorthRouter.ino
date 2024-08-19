@@ -51,7 +51,8 @@ void setup() {
 
   /* Halt if NRF Module does not begin*/
   if(!rfmodule.begin()) while(1);
-  rfmodule.setDataRate(RF24_2MBPS);
+  rfmodule.setDataRate(RF24_1MBPS);
+  rfmodule.setPAlevel();
   while(!router.sync(100)); 
 
   delay(100);

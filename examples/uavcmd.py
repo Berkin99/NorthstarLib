@@ -36,9 +36,9 @@ if __name__ == '__main__':
 
     time.sleep(5)
     while uavcom.radio.isRadioAlive():
-        vector = uavcom.GET("system.adc")
+        vector = uavcom.GET("bnocal")
         print(vector)
-        time.sleep(0.01)
+        time.sleep(0.1)
     
     uavcom.destroy()
     radioManager.closeAvailableRadios()

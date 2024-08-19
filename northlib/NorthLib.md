@@ -17,7 +17,7 @@ external embedded devices with PC.
 * Real time data updating
 * Function call in the embedded device
 * Multi agent operations
-* 2MBps comminication speed
+* 2mbps comminication speed
 
 ## NTRP
 

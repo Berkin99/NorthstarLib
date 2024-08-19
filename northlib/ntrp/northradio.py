@@ -178,10 +178,10 @@ class NorthRadio(NorthPort):
         print(ntrp.NTRP_bytes(arr))
         """
         
-        if force==True:
+        if force == True:
             #self.port.write(arr) 
             try:  
-                self.txQueue.put(block=False,item=arr)
+                self.txQueue.put(block = False, item = arr)
             except queue.Full: pass
         else:
             try:    
