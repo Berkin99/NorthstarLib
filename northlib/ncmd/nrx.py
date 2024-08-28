@@ -84,7 +84,7 @@ class Nrx:
     NRTP Packet for add NRX = CMD,1,index,type,name
     CMD-1 = Table append command.
     """
-    def __init__(self,index=0,rawtype=None,name=str):
+    def __init__(self,index=0,rawtype=NRX_UINT8,name=str):
         self.index = index
         self.type  = NrxType(rawtype)
         self.name  = str(name)
@@ -153,13 +153,13 @@ def NrxValueUnite (value,vartype)->bytes:
     """ NrxType_e based Value to bytes """
 
     parser = {
-        NrxType_e.UINT8: lambda val:struct.pack( 'B', val),
-        NrxType_e.UINT16:lambda val:struct.pack('<H', val),
-        NrxType_e.UINT32:lambda val:struct.pack('<I', val),
-        NrxType_e.INT8:  lambda val:struct.pack( 'b', val),
-        NrxType_e.INT16: lambda val:struct.pack('<h', val),
-        NrxType_e.INT32: lambda val:struct.pack('<i', val),
-        NrxType_e.FLOAT: lambda val:struct.pack('<f', val),
+        NrxType_e.UINT8: lambda val:struct.pack( 'B', int(val)),
+        NrxType_e.UINT16:lambda val:struct.pack('<H', int(val)),
+        NrxType_e.UINT32:lambda val:struct.pack('<I', int(val)),
+        NrxType_e.INT8:  lambda val:struct.pack( 'b', int(val)),
+        NrxType_e.INT16: lambda val:struct.pack('<h', int(val)),
+        NrxType_e.INT32: lambda val:struct.pack('<i', int(val)),
+        NrxType_e.FLOAT: lambda val:struct.pack('<f', float(val)),
     }
     return parser.get(vartype)(value)
 

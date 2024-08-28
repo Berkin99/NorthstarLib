@@ -28,10 +28,10 @@ if __name__ == '__main__':
     uavcom = NorthNRF(address="E7E7E7E301")
  
     while 1:
-        if uavcom.radio.isRadioAlive()==False : break 
+        if uavcom.radio.isRadioAlive() == False : break 
         if ctrl.isAlive == False : break
         uavcom.txCMD(channels=ctrl.getAxis(),force=True)
-        time.sleep(0.02)
+        time.sleep(0.05)
 
     ctrl.destroy()
     uavcom.destroy()

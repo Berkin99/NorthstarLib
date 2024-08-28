@@ -72,7 +72,9 @@ def closeAvailableRadios():
     print("RadioManager:/> All radios closed.")
 
 def getRadio(index=int)->NorthRadio:
-    if index >= len(availableRadios) or index < 0: raise ValueError
+    if index >= len(availableRadios) or index < 0:
+        print("RadioManager:/> Radios not initalized.") 
+        raise ValueError
     return availableRadios[index]
 
 def getAvailableRadios():

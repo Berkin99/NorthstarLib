@@ -92,8 +92,8 @@ class NorthCOM(NorthNRF):
     def getParamTable(self):
         return self.paramtable
 
-    def SET(self,name=str,value=any):
-        self.paramtable.setByName(name,value)
+    def SET(self,name=str, value=any):
+        self.paramtable.setByName(name, value)
         nx = self.paramtable.search(name)
         if nx == None: return 
         arr = self.paramtable.getByIndex(nx.index)

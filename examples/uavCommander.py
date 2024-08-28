@@ -19,17 +19,29 @@ import northlib.ncmd.controller as ncmd
 from   northlib.ncmd.northcom import NorthCOM
 from   northlib.ncmd.nrxtable import NrxTableLog
 import keyboard
+import threading
 
 uri =  "radio:/0/76/2/E7E7E7E301"
 
-def uavctrlTask(uavcom):
+def nrxProcess(uavcom):
+    nrx_valid = False
     while 1:
-        uavcom.txCMD(channels=ctrl.getAxis(),force=True)
-        time.sleep(0.02)
+        nrx_valid = False
+        while (not nrx_valid):
+            getval = input("> Enter Log Value: ")
+            if (uavtable.search(getval) != None): nrx_valid = True
+
+        while not keyboard.is_pressed('esc'):
+            if uavcom.radio.isRadioAlive() == False : break
+            time.sleep(0.01)
+            value = uavcom.GET(getval)        
+            print(value)
+
+        NrxTableLog(uavtable) # Print The NRX Table
 
 if __name__ == '__main__':
 
-    radioManager.radioSearch(baud=2000000)    #Arduino DUE (USB Connection) has no Baudrate
+    radioManager.radioSearch (baud=2000000)    #Arduino DUE (USB Connection) has no Baudrate
     if not len(radioManager.availableRadios) > 0: sys.exit()
 
     ctrl = ncmd.Controller(True) #Joystick controller
@@ -40,24 +52,15 @@ if __name__ == '__main__':
     uavcom.connect()        # Request ACK to sended MSG
     uavcom.synchronize()    # Syncronize the NRX Table
 
-    # ctrl.callBack = lambda x : uavcom.txCMD(channels=x, force= True)
+    #ctrl.callBack = lambda x : uavcom.txCMD(channels = x, force= True)
     uavtable = uavcom.getParamTable()
 
-    while 1:
-        nrx_valid = False
-        while (not nrx_valid):
-            getval = input("> Enter Log Value: ")
-            if (uavtable.search(getval) != None): nrx_valid = True
+    nrxThread = threading.Thread(target = nrxProcess, daemon = True, args = [uavcom])
+    nrxThread.start()
 
-        while 1:
-            if uavcom.radio.isRadioAlive() == False : break
-            if keyboard.is_pressed('esc') : break 
-            time.sleep(0.01)
-            value = uavcom.GET(getval)        
-            print(value)
-
-        NrxTableLog(uavtable) # Print The NRX Table
-
+    while(1): 
+        time.sleep(1)
+    
     ctrl.destroy()
     uavcom.destroy()
     radioManager.closeAvailableRadios()

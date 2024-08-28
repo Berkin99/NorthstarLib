@@ -36,7 +36,6 @@ class NrxTable:
         """ DEBUG ELEMENT
         nrx.NrxLog(nrxElement)
         """
-
         self.table.append(nrxElement)
         if self.ingroup == False: 
             self.indexMap.append(nrxElement.index)
@@ -51,14 +50,14 @@ class NrxTable:
     @return : Found Nrx object 
     """
     def search(self,name = str)->nrx.Nrx:
-        part = name.split('.',1)
+        part = name.split('.', 1)
         nx = None
         for ix in self.indexMap:
             if self.table[ix].name == part[0]:
                 nx = self.table[ix]
         
         if len(part)<2: return nx 
-        if nx==None: return None
+        if nx == None: return None
 
         inx = nx.index+1
 
@@ -73,7 +72,7 @@ class NrxTable:
     Search with table index int
     @return : nrx bytearray value 
     """
-    def getByIndex(self,index=int)->bytearray:
+    def getByIndex(self, index=int)->bytearray:
         if index>len(self.table): return None
         nx = nrx.Nrx()
         nx = self.table[index]
@@ -103,8 +102,7 @@ class NrxTable:
         
         return arr
         
-
-    def setByIndex(self,index = int, rawbytes = bytearray()):
+    def setByIndex(self, index = int, rawbytes = bytearray()):
         nx = self.table[index]
         if nx == None: return False
 
@@ -127,9 +125,11 @@ class NrxTable:
             index += 1
         
         return True
-        
-
-    def setByName(self,name=str, value = any):
+    """
+    Set the nrx value as the type.
+    Use array values for given nrx group names.
+    """    
+    def setByName(self, name = str, value = any):
         nx = self.search(name)
         if nx == None: return
         if not nx.type.group: 
@@ -140,7 +140,6 @@ class NrxTable:
         for i in range(len(value)):
             if self.table[inx+i].type.group: break
             self.table[inx+i].value = value[i]
-
 
 
 def NrxTableLog(table = NrxTable()):

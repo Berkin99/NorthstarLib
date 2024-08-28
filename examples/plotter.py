@@ -59,7 +59,7 @@ if __name__ == '__main__':
 
         while not keyboard.is_pressed('esc'):
             if uavcom.radio.isRadioAlive()==False : break 
-            # time.sleep(0.01)
+            #time.sleep(0.01)
             value = uavcom.GET(getval)        
             lp.add_data(value)    
             print(value)

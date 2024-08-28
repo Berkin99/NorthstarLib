@@ -20,7 +20,7 @@ class Controller():
     NTRP Joystick Controller
     Dynamic Throttle 
     """
-    THREAD_SLEEP = 0.05
+    THREAD_SLEEP = 0.025
     
     def __init__(self,dynamic=False):
         self.isAlive = False
@@ -64,7 +64,9 @@ class Controller():
             for event in pygame.event.get(pygame.JOYBUTTONUP):
                 self.axis[5] = int(self.joystick.get_button(9))
 
-            if self.dynamic and self.axis[5]==0:
+            if(self.axis[5] == 1) : self.axis[5] = 2
+            
+            if self.dynamic and self.axis[5] == 0:
                 self.dynChannel.calculate(self.axis[3],self.axis[4],self.THREAD_SLEEP)
 
             time.sleep(self.THREAD_SLEEP)
@@ -123,7 +125,7 @@ class Dynamo:
 # print("REMOVE TESTING PRINT")
 # test = Controller(True)
 # while 1:
-#     pass
+#     print(test.getAxisRaw())
 
 
 
