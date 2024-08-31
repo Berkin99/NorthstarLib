@@ -31,7 +31,7 @@ if __name__ == '__main__':
         if uavcom.radio.isRadioAlive() == False : break 
         if ctrl.isAlive == False : break
         uavcom.txCMD(channels=ctrl.getAxis(),force=True)
-        time.sleep(0.05)
+        time.sleep(0.02)
 
     ctrl.destroy()
     uavcom.destroy()

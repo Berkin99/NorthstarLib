@@ -29,6 +29,10 @@ class NorthCOM(NorthNRF):
 
     * Communicates with agent.
     * Parameter, Function Syncronisation
+
+    * NRX Table :		  @self.paramtable 
+    * Connection status : @self.connection 
+
     """
 
     CMD_PARAM_CONTENT    = 1
@@ -39,7 +43,7 @@ class NorthCOM(NorthNRF):
         part = uri.split('/')
         super().__init__(int(part[1]),int(part[2]),int(part[3]),part[4])
 
-        #Set UAVCOM Based Callback Functions        
+        #Set Callback Functions        
         self.setCallBack(ntrp.NTRPHeader_e.ACK,self.rxACK)
         self.setCallBack(ntrp.NTRPHeader_e.NAK,self.rxNAK)
         self.setCallBack(ntrp.NTRPHeader_e.SET,self.rxSET)
@@ -50,12 +54,13 @@ class NorthCOM(NorthNRF):
         self.setRxHandleMode(self.RX_HANDLE_MODE_CALLBACK)
         #Set Dongle to Transceiver Mode
         self.txTRX()
-
+        time.sleep(0.1)
+        
         self.connection = False
         self.paramtable = NrxTable()
 
     """ ACK Request to Sended MESSAGE """
-    def connect(self,timeout = 30):
+    def connect(self,timeout = 20):
         rettime = self.waitConnection(timeout)
         if rettime > 0 : 
             self.printID("connected in " + str(rettime) + " seconds.")

@@ -99,7 +99,7 @@ class NorthPipe():
             self.rxbuffer.append(rxPacket)
         elif self.rxHandleMode == self.RX_HANDLE_MODE_CALLBACK:
             rxCallBack = self.rxCallBack.get(rxPacket.header)
-            if rxCallBack == None: self.printID("receivePacket Error : " + rxPacket.header.name + " Header CallBack is None")
+            if rxCallBack == None: self.printID("receivePacket Error : " + rxPacket.header.name + " Header CallBack not found")
             else : 
                 rxCallBack(rxPacket)
                 self.lastConnection = time.time()
