@@ -46,6 +46,11 @@ class UavCOM(NorthCOM):
 		self.rc       = [0, 0, 0, 0, 0]
 
 	def start(self):
+		self.connect()
+		if self.connection is True:
+			self.synchronize()
+			self.uavAlive = True
+
 		self.uavThread.start()
 
 	def setPosition(self, pos=list[float]): self.position = pos
@@ -76,11 +81,6 @@ class UavCOM(NorthCOM):
 		self.SET("uavcom", refset)
 
 	def _uavTask(self):
-		self.connect()
-		if self.connection is True:
-			self.synchronize()
-			self.uavAlive = True
-			
 		while self.uavAlive:
 			self.modeFunc()
 			time.sleep(0.05)

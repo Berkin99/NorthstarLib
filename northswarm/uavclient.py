@@ -51,16 +51,25 @@ class UavClient():
 
 	def commandParser(self, string = str):
 		parsed = string.split(' ')
-		com = UavCOM
+		if(len(parsed) < 1): return
+		com = None
+		if(parsed[0] == "AUTO")   : self.setAutoAll()
 		if(parsed[0] == "TAKEOFF"): self.takeOffAll()
 		if(parsed[0] == "LAND")   : self.landAll()
 		if(parsed[0] == "IDLE")   : self.landForce()
+		
 		if(parsed[0] == "0")      : com = self.comList[0]
 		if(parsed[0] == "1")      : com = self.comList[1]
 		if(parsed[0] == "2")      : com = self.comList[2]
+		
 		if com is None : return
+		if(len(parsed) < 2): return
 
-		if(parsed[1] == "GO"): com.go([float(x) for x in parsed[2:]])
+		if(parsed[1] == "POS")    : com.setPosition([float(x) for x in parsed[1:]])
+		if(parsed[1] == "AUTO")   : com.setAuto()
+		if(parsed[1] == "TAKEOFF"): com.takeOff()
+		if(parsed[1] == "LAND")   : com.land()
+		if(parsed[1] == "IDLE")   : com.landForce() 
 
 uris = [
 	"radio:/0/76/2/E7E7E7E301",
@@ -71,7 +80,7 @@ if __name__ == '__main__':
 	
 	radioManager.radioSearch (baud=2000000) #Arduino DUE (USB Connection) has no Baudrate
 	if not len(radioManager.availableRadios) > 0: sys.exit()
-
+	time.sleep(1)
 	client = UavClient(uris)
 
 	client.commandParser(input())
