@@ -37,8 +37,7 @@ import time
 
 """
 
-availableRadios = []
-
+availableRadios = list[NorthRadio]([])
 
 def radioSearch(baud=115200):
     """
@@ -73,8 +72,8 @@ def closeAvailableRadios():
 
 def getRadio(index=int)->NorthRadio:
     if index >= len(availableRadios) or index < 0:
-        print("RadioManager:/> Radios not initalized.") 
-        raise ValueError
+        print("RadioManager:/> Radio "+ str(index) +" not initalized.")
+        return None
     return availableRadios[index]
 
 def getAvailableRadios():
