@@ -33,9 +33,9 @@ class UavClient():
 	def startAll(self):
 		for com in self.comList: com.start()	
 
-	def setPositions(self, pList):
+	def setPosition(self, pos):
 		for i in range(len(self.comList)):
-			self.comList[i].setPosition(pList[i])
+			self.comList[i].setPosition(pos)
 
 	def setAutoAll(self):
 		for com in self.comList: com.setAuto()
@@ -57,6 +57,7 @@ class UavClient():
 		if(parsed[0] == "TAKEOFF"): self.takeOffAll()
 		if(parsed[0] == "LAND")   : self.landAll()
 		if(parsed[0] == "IDLE")   : self.landForce()
+		if(parsed[0] == "POS")    : self.setPosition([float(x) for x in parsed[1:]])
 		
 		if(parsed[0] == "0")      : com = self.comList[0]
 		if(parsed[0] == "1")      : com = self.comList[1]
@@ -72,8 +73,8 @@ class UavClient():
 		if(parsed[1] == "IDLE")   : com.landForce() 
 
 uris = [
-	"radio:/0/76/2/E7E7E7E301",
-	"radio:/1/76/2/E7E7E7E303",
+	"radio:/1/76/2/E7E7E7E301",
+	"radio:/0/76/2/E7E7E7E303",
 ]
 
 if __name__ == '__main__':

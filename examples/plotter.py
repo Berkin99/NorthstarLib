@@ -21,7 +21,7 @@ from northlib.ncmd.nrxtable import NrxTableLog
 from livePlot import LivePlot
 import keyboard
 
-uri =  "radio:/0/76/2/E7E7E7E301"
+uri =  "radio:/0/76/2/E7E7E7E303"
 
 if __name__ == '__main__':
 
