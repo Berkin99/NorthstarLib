@@ -36,7 +36,7 @@ if __name__ == '__main__':
 
     uavtable = uavcom.getParamTable()
     
-    lp = LivePlot(0,100,100)
+    lp = LivePlot(0, 100,100)
     print("Plotter Started")
 
     while 1:

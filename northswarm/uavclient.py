@@ -20,25 +20,49 @@ from   northlib.ncmd.northcom  import NorthCOM
 from   northlib.ncmd.nrxtable  import NrxTableLog
 from   northswarm.uavcom import UavCOM
 from   shape import Shape
+from   math3d import *
 
 import keyboard
 import threading
 
 class UavClient():
-	def __init__(self, uris = list[str]):
+	def __init__(self, uris = list[str], spos=list):
+		self.rc = ncmd.Controller(True) # Joystick controller
+
 		self.comList = list[UavCOM]([])
 		for uri in uris: self.comList.append(UavCOM(uri))
+		for i in range(len(spos)):
+			if i >= len(self.comList): break 
+			self.comList[i].posBias = spos[i]
+			self.comList[i].position = vadd([0, 0, 2], spos[i])
 		self.startAll()
 
-	def startAll(self):
-		for com in self.comList: com.start()	
+	def setOperation(self, shp1, shp2):
+		pass
+
+	def setShape(self):
+		pass
 
 	def setPosition(self, pos):
-		for i in range(len(self.comList)):
-			self.comList[i].setPosition(pos)
+		if len(pos) < 3: return
+		try:
+			for i in range(len(self.comList)):
+				self.comList[i].setPosition(vadd(self.comList[i].posBias, pos))
+		except: ValueError
+
+	def startAll(self):
+		for com in self.comList: 
+			com.start()	
+			time.sleep(0.01)
 
 	def setAutoAll(self):
 		for com in self.comList: com.setAuto()
+
+	def setPositionAll(self, pCloud):
+		print(pCloud) 
+		for i in range(len(pCloud)):
+			if(i >= len(self.comList)): break
+			self.comList[i].setPosition(pCloud[i])
 
 	def takeOffAll(self):
 		for com in self.comList: com.takeOff()
@@ -53,12 +77,18 @@ class UavClient():
 		parsed = string.split(' ')
 		if(len(parsed) < 1): return
 		com = None
+
 		if(parsed[0] == "AUTO")   : self.setAutoAll()
 		if(parsed[0] == "TAKEOFF"): self.takeOffAll()
 		if(parsed[0] == "LAND")   : self.landAll()
 		if(parsed[0] == "IDLE")   : self.landForce()
 		if(parsed[0] == "POS")    : self.setPosition([float(x) for x in parsed[1:]])
-		
+
+		if(parsed[0] == "NAV0")   : self.setPositionAll([[-3,  0,  11], [0,  5,  11], [3,  0,  11]])
+		if(parsed[0] == "NAV1")   : self.setPositionAll([[-3, 15,  12], [0,  20, 12], [0,  15, 12]])
+		if(parsed[0] == "NAV2")   : self.setPositionAll([[ 7, 15,  12], [10, 20, 12], [13, 15, 12]])
+		if(parsed[0] == "NAV3")   : self.setPositionAll([[-3,  0,  13], [0,  5,  13], [3,  0,  13]])
+
 		if(parsed[0] == "0")      : com = self.comList[0]
 		if(parsed[0] == "1")      : com = self.comList[1]
 		if(parsed[0] == "2")      : com = self.comList[2]
@@ -66,23 +96,29 @@ class UavClient():
 		if com is None : return
 		if(len(parsed) < 2): return
 
-		if(parsed[1] == "POS")    : com.setPosition([float(x) for x in parsed[1:]])
-		if(parsed[1] == "AUTO")   : com.setAuto()
-		if(parsed[1] == "TAKEOFF"): com.takeOff()
-		if(parsed[1] == "LAND")   : com.land()
-		if(parsed[1] == "IDLE")   : com.landForce() 
+		if(parsed[1] == "POS")     : com.setPosition([float(x) for x in parsed[1:]])
+		if(parsed[1] == "AUTO")    : com.setAuto()
+		if(parsed[1] == "TAKEOFF") : com.takeOff()
+		if(parsed[1] == "LAND")    : com.land()
+		if(parsed[1] == "IDLE")    : com.landForce()
+		if(parsed[1] == "MANUAL")  : 
+			self.rc.callBack = lambda x : com.setRC(channels = x) 
+			com.setManual()
 
 uris = [
-	"radio:/1/76/2/E7E7E7E301",
-	"radio:/0/76/2/E7E7E7E303",
+	"radio:/0/76/2/E7E7E7E301",
+	"radio:/1/76/2/E7E7E7E303",
+	"radio:/2/76/2/E7E7E7E305",
 ]
+
+spos = [[-3, 0, 0], [0, 5, 0], [3, 0, 0]]
 
 if __name__ == '__main__':
 	
 	radioManager.radioSearch (baud=2000000) #Arduino DUE (USB Connection) has no Baudrate
-	if not len(radioManager.availableRadios) > 0: sys.exit()
+	if not len(radioManager.availableRadios) >= len(uris): sys.exit()
 	time.sleep(1)
-	client = UavClient(uris)
+	client = UavClient(uris, spos)
 
 	client.commandParser(input())
 	while (1):

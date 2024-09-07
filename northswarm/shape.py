@@ -30,26 +30,19 @@ Shapes={
 }
 
 Shape_names={
-    'Easy'      :0,
-    'Triangle'  :1,
+    'Easy'      : 0,
+    'Triangle'  : 1,
 }
 
 class Shape:
 
-    def __init__(self):
-        self.pos = Blank
-        self.rot = Blank
-        self.scale  = 1
-        self.type   = 0
-        self.setShape(Blank, Blank, 1, 0)
-
-    def setShape(self, pos=Blank, rot=Blank, scale=1, type=0):
-        self.pos=pos
-        self.rot=rot
-        self.scale=scale
-        self.type=type
+    def __init__(self, pos=Blank, rot=Blank, scale=1, index=0):
+        self.pos   = pos
+        self.rot   = rot
+        self.scale = scale
+        self.type  = index
         self.abs_points = Shapes[self.type]
-        self.points = self.get_shape()
+        self.points = self.getShape()
     
     def rotater(self, pcloud, rot):
         pcl = []
@@ -96,3 +89,4 @@ class Shape:
         pcl = self.poser(pcl,self.pos)
         return pcl
     
+

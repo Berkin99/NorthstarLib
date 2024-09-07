@@ -18,6 +18,7 @@ import northlib.ntrp.ntrp as ntrp
 import northlib.ncmd.controller as ncmd
 from   northlib.ncmd.northcom import NorthCOM
 from   northlib.ncmd.nrxtable import NrxTableLog
+from   math3d import *
 import struct
 import threading
 
@@ -42,20 +43,22 @@ class UavCOM(NorthCOM):
 		self.uavAlive = False
 
 		self.position = [0.0, 0.0, 2.0] #Position Self Frame
+		self.posBias  = [0.0, 0.0, 0.0] #Start Position
 		self.heading  =  0.0            #Rotation Self Frame
 		self.rc       = [0, 0, 0, 0, 0]
 
 	def start(self):
-		self.connect()
+		#self.connect()
+		self.connection = True # Not ideal 
+
 		if self.connection is True:
-			self.synchronize()
 			self.uavAlive = True
 
 		self.uavThread.start()
 
 	def setPosition(self, pos=list[float]): self.position = pos
-	def setManual(self):    self.setMode(self.UAV_MANUAL)
-	def setAuto(self):      self.setMode(self.UAV_AUTO)
+	def setManual(self): self.setMode(self.UAV_MANUAL)
+	def setAuto(self):   self.setMode(self.UAV_AUTO)
 	def takeOff(self):   self.setMode(self.UAV_TAKEOFF)
 	def land(self):    	 self.setMode(self.UAV_LAND)
 	def landForce(self): self.setMode(self.UAV_IDLE)
@@ -83,7 +86,7 @@ class UavCOM(NorthCOM):
 	def _uavTask(self):
 		while self.uavAlive:
 			self.modeFunc()
-			time.sleep(0.05)
+			time.sleep(0.03)
 
 	def _uavIdle(self):
 		self.uavCMD([self.UAV_IDLE])
@@ -95,9 +98,10 @@ class UavCOM(NorthCOM):
 	
 	def _uavAuto(self):
 		arg = [self.UAV_AUTO]
-		arg.extend(struct.pack('<f', float(self.position[0])))
-		arg.extend(struct.pack('<f', float(self.position[1])))
-		arg.extend(struct.pack('<f', float(self.position[2])))
+		nav = vsub(self.position, self.posBias)
+		arg.extend(struct.pack('<f', float(nav[0])))
+		arg.extend(struct.pack('<f', float(nav[1])))
+		arg.extend(struct.pack('<f', float(nav[2])))
 		self.uavCMD(arg)
 	
 	def _uavHeight(self):
