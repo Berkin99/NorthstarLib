@@ -8,42 +8,38 @@
 #   2024 Yeniay Uav Flight Control Systems
 #   Research and Development Team
 
-
+import time
 import math
+from math3d import*
 
-Blank =[0, 0, 0]
-
-Easy =[
-    [-2, 0, 0],
-    [ 2, 0, 0]
-]
+Blank = [0.0, 0.0, 0.0]
 
 Triangle = [
-    [   0,    1, 0],
-    [-0.8, -0.4, 0],
-    [ 0.8, -0.4, 0]
+    [-1.6, -0.8, 0],
+    [   0,    2, 0],
+    [ 1.6, -0.8, 0]
 ]
 
-Shapes={
-    0 : Easy,
-    1 : Triangle,
-}
+Safe = [
+    [-1.6, -0.8,  3],
+    [   0,    2,  0],
+    [ 1.6, -0.8, -3]
+]
 
-Shape_names={
-    'Easy'      : 0,
-    'Triangle'  : 1,
-}
+Trimap = [
+    [-15,  0,  3],
+    [-13,  0,  0],
+    [-11,  0, -3]
+]
 
 class Shape:
 
-    def __init__(self, pos=Blank, rot=Blank, scale=1, index=0):
+    def __init__(self, pos=Blank, rot=Blank, scale = float(1), pCloud = list):
         self.pos   = pos
         self.rot   = rot
         self.scale = scale
-        self.type  = index
-        self.abs_points = Shapes[self.type]
-        self.points = self.getShape()
-    
+        self.abstract = pCloud
+
     def rotater(self, pcloud, rot):
         pcl = []
         x = math.radians(rot[0])
@@ -64,7 +60,7 @@ class Shape:
         
         return pcl
 
-    def scaler(self,pcloud,scl):
+    def scaler(self, pcloud, scl):
         pcl = []
         for p in pcloud:
             p = [p[0]*scl,p[1]*scl,p[2]*scl]
@@ -74,7 +70,7 @@ class Shape:
             pcl.append(p)
         return pcl
     
-    def poser(self,pcloud,pos):
+    def poser(self, pcloud, pos):
         pcl = pcloud
         for p in pcl:
             p[0]=round(pos[0]+p[0],5)
@@ -82,11 +78,16 @@ class Shape:
             p[2]=round(pos[2]+p[2],5)
         return pcl
 
-    def getShape(self):
-        pcl = self.abs_points
+    def getPoints(self):
+        pcl = self.abstract
         pcl = self.rotater(pcl,self.rot)
         pcl = self.scaler(pcl,self.scale)
         pcl = self.poser(pcl,self.pos)
         return pcl
     
 
+def shapeLerp(shp1 = Shape(), shp2 = Shape(), alpha = float):
+    pos = vlerp(shp1.pos, shp2.pos, alpha)
+    rot = vlerp(shp1.rot, shp2.rot, alpha)
+    scl = (shp1.scale * (1 - alpha)) + (shp2.scale * (alpha))
+    return Shape(pos, rot, scl, shp1.abstract)

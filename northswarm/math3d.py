@@ -90,7 +90,7 @@ def vnearest(v,pcl,d=20000,z0=False):
     return nearest
 
 
-def origin_set(pcloud=[],new_origin=[],z0=False):
+def origin_set(pcloud=[], new_origin=[], z0=False):
     newpc =[]
     for p in pcloud:
         if z0: 
@@ -152,7 +152,6 @@ def peucker2d(pline=[],divider=1):
     return pckr
 
 def vposer(pcloud,pos):
-
         pcl = pcloud.copy()
         ps = pos.copy()
         for p in pcl:

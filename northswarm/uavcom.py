@@ -15,9 +15,7 @@ import time
 import northlib.ntrp as radioManager
 from   northlib.ntrp.northpipe import NorthPipe,NorthNRF
 import northlib.ntrp.ntrp as ntrp
-import northlib.ncmd.controller as ncmd
 from   northlib.ncmd.northcom import NorthCOM
-from   northlib.ncmd.nrxtable import NrxTableLog
 from   math3d import *
 import struct
 import threading
@@ -48,8 +46,8 @@ class UavCOM(NorthCOM):
 		self.rc       = [0, 0, 0, 0, 0]
 
 	def start(self):
-		#self.connect()
-		self.connection = True # Not ideal 
+		#self.connect() # Wait Connection Sync
+		self.connection = True # 1 Way Connection, Not ideal 
 
 		if self.connection is True:
 			self.uavAlive = True
@@ -57,8 +55,13 @@ class UavCOM(NorthCOM):
 		self.uavThread.start()
 
 	def setPosition(self, pos=list[float]): self.position = pos
+	
 	def setManual(self): self.setMode(self.UAV_MANUAL)
-	def setAuto(self):   self.setMode(self.UAV_AUTO)
+	
+	def setAuto(self):
+		if self.mode == self.UAV_IDLE: return
+		self.setMode(self.UAV_AUTO)
+	
 	def takeOff(self):   self.setMode(self.UAV_TAKEOFF)
 	def land(self):    	 self.setMode(self.UAV_LAND)
 	def landForce(self): self.setMode(self.UAV_IDLE)
@@ -128,4 +131,23 @@ class UavCOM(NorthCOM):
 		self.setMode(self.UAV_IDLE)
 		self.uavAlive = False
 		return super().destroy()
+
+
+uri = "radio:/2/76/2/E7E7E7E305",
+
+if __name__ == '__main__':
+
+	radioManager.radioSearch(baud=2000000) #Arduino DUE (USB Connection) has no Baudrate
+	if not len(radioManager.availableRadios) >= 1: sys.exit()
+	com = UavCOM(uri)
+	com.start()
+
+	# TODO: Make this IUavCOM object, full terminal commanded UAV
+	while(1):
+		parsed = input().split()
+		if(parsed[0] == "AUTO")   : com.setAuto()
+		if(parsed[0] == "TAKEOFF"): com.takeOff()
+		if(parsed[0] == "LAND")   : com.land()
+		if(parsed[0] == "IDLE")   : com.landForce()
+		if(parsed[0] == "POS")    : com.setPosition([float(x) for x in parsed[1:]])
 
