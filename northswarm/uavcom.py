@@ -139,15 +139,20 @@ if __name__ == '__main__':
 
 	radioManager.radioSearch(baud=2000000) #Arduino DUE (USB Connection) has no Baudrate
 	if not len(radioManager.availableRadios) >= 1: sys.exit()
+	time.sleep(1)
 	com = UavCOM(uri)
 	com.start()
 
-	# TODO: Make this IUavCOM object, full terminal commanded UAV
 	while(1):
 		parsed = input().split()
 		if(parsed[0] == "AUTO")   : com.setAuto()
 		if(parsed[0] == "TAKEOFF"): com.takeOff()
 		if(parsed[0] == "LAND")   : com.land()
 		if(parsed[0] == "IDLE")   : com.landForce()
-		if(parsed[0] == "POS")    : com.setPosition([float(x) for x in parsed[1:]])
-
+		if(parsed[0] == "POS")    :
+			try: com.setPosition([float(x) for x in parsed[1:]])
+			except: ValueError 
+		if(parsed[0] == "EXIT")   : break
+	
+	com.landForce()
+	sys.exit()

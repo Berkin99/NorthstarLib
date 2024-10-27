@@ -154,23 +154,17 @@ class UavClient():
 			self.rc.callBack = lambda x : com.setRC(channels = x) 
 			com.setManual()
 
-# uris = [
-# 	"radio:/0/76/2/E7E7E7E301",
-# 	"radio:/1/76/2/E7E7E7E303",
-# 	"radio:/2/76/2/E7E7E7E305",
-# ]
-
-# spos = [[-3, 0, 0], [0, 5, 0], [3, 0, 0]]
-
 uris = [
+	"radio:/0/76/2/E7E7E7E301",
+	"radio:/1/76/2/E7E7E7E303",
 	"radio:/2/76/2/E7E7E7E305",
 ]
 
-spos = [[0, 0, 0]]
+spos = [[-3, 0, 0], [0, 5, 0], [3, 0, 0]]
 
 if __name__ == '__main__':
 
-	radioManager.radioSearch (baud=2000000) #Arduino DUE (USB Connection) has no Baudrate
+	radioManager.radioSearch(baud=2000000)
 	if not len(radioManager.availableRadios) >= len(uris): sys.exit()
 	time.sleep(1)
 	client = UavClient(uris, spos)
@@ -178,4 +172,3 @@ if __name__ == '__main__':
 	print("Commands ON")
 	while (1):
 		client.commandParser(input())
-	

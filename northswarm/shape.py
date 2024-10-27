@@ -34,7 +34,7 @@ Trimap = [
 
 class Shape:
 
-    def __init__(self, pos=Blank, rot=Blank, scale = float(1), pCloud = list):
+    def __init__(self, pos=Blank, rot=Blank, scale=1.0, pCloud=[]):
         self.pos   = pos
         self.rot   = rot
         self.scale = scale
@@ -79,6 +79,7 @@ class Shape:
         return pcl
 
     def getPoints(self):
+        """ Point pipeline should not change """
         pcl = self.abstract
         pcl = self.rotater(pcl,self.rot)
         pcl = self.scaler(pcl,self.scale)
