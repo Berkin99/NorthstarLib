@@ -25,7 +25,7 @@ if __name__ == '__main__':
     ctrl = ncmd.Controller(True) #Joystick controller
     time.sleep(1)
     
-    uavcom = NorthNRF(address="E7E7E7E305")
+    uavcom = NorthNRF(address="E7E7E7E303")
  
     while 1:
         if uavcom.radio.isRadioAlive() == False : break 
