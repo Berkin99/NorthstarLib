@@ -91,11 +91,12 @@ class NorthRadio(NorthPort):
         #New Unique Pipe ID (char) Request
         #Only important thing is, pipe id need to be a char and unique
 
-        max_id_value = ord('1')
-        for i in range(len(self.pipes)):
-            test_id_value = ord(self.pipes[i].id)
-            if  test_id_value > max_id_value : max_id_value = test_id_value 
-        return chr(max_id_value)
+        max_id_value = ord('0')
+        for pipe in self.pipes:
+            test_id_value = ord(pipe.id)
+            if test_id_value > max_id_value:
+                max_id_value = test_id_value
+        return chr(max_id_value + 1)
 
     def rxHandler(self,msg=ntrp.NTRPMessage):
 
