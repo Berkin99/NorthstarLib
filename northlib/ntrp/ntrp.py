@@ -73,7 +73,7 @@ class NTRPMessage(NTRPPacket):
     
     def setPacket(self,packet=NTRPPacket):
         self.header = packet.header
-        self.dataID = packet.setDataID
+        self.dataID = packet.dataID
         self.data   = packet.data
         
 # @param raw_bytearray = bytearray
