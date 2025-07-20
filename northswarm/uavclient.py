@@ -20,8 +20,9 @@ from   northlib.ncmd.northcom  import NorthCOM
 from   northlib.ncmd.nrxtable  import NrxTableLog
 from   northswarm.uavcom import UavCOM
 
-from   shape import *
-from   math3d import *
+# Import helpers from this package so running as a module works
+from northswarm.shape import *
+from northswarm.math3d import *
 
 import time
 import threading

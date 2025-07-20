@@ -10,7 +10,8 @@
 
 import time
 import math
-from math3d import*
+# Local vector math helpers
+from northswarm.math3d import *
 
 Blank = [0.0, 0.0, 0.0]
 
