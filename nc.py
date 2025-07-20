@@ -23,6 +23,11 @@ LINK_FILE = os.path.expanduser("~/.northstar_links")
 DEFAULT_BAUD = 2000000
 SOCKET_FILE = os.path.expanduser("~/.northstar_socket")
 
+# Use a UNIX socket if supported, otherwise fall back to a local TCP port so the
+# tool can run on Windows as well.
+USE_UNIX = hasattr(socket, "AF_UNIX")
+SOCKET_ADDR = SOCKET_FILE if USE_UNIX else ("127.0.0.1", 28600)
+
 
 def load_links():
     if not os.path.exists(LINK_FILE):
@@ -40,12 +45,13 @@ def save_links(ids):
 
 
 def send_request(req):
-    if not os.path.exists(SOCKET_FILE):
+    if USE_UNIX and not os.path.exists(SOCKET_FILE):
         print("Daemon not running. Start it with 'nc run'", file=sys.stderr)
         return None
     try:
-        s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        s.connect(SOCKET_FILE)
+        s = socket.socket(socket.AF_UNIX if USE_UNIX else socket.AF_INET,
+                          socket.SOCK_STREAM)
+        s.connect(SOCKET_ADDR)
         s.sendall(json.dumps(req).encode())
         data = b""
         while True:
@@ -101,11 +107,12 @@ def server_loop():
     if ids:
         coms = connect(ids)
 
-    if os.path.exists(SOCKET_FILE):
+    if USE_UNIX and os.path.exists(SOCKET_FILE):
         os.remove(SOCKET_FILE)
 
-    sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-    sock.bind(SOCKET_FILE)
+    sock = socket.socket(socket.AF_UNIX if USE_UNIX else socket.AF_INET,
+                         socket.SOCK_STREAM)
+    sock.bind(SOCKET_ADDR)
     sock.listen(1)
 
     try:
@@ -187,7 +194,7 @@ def server_loop():
             conn.sendall(json.dumps(resp).encode())
             conn.close()
     finally:
-        if os.path.exists(SOCKET_FILE):
+        if USE_UNIX and os.path.exists(SOCKET_FILE):
             os.remove(SOCKET_FILE)
         close(coms)
 
