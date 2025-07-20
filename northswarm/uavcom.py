@@ -16,7 +16,8 @@ import northlib.ntrp as radioManager
 from   northlib.ntrp.northpipe import NorthPipe,NorthNRF
 import northlib.ntrp.ntrp as ntrp
 from   northlib.ncmd.northcom import NorthCOM
-from   math3d import *
+# The math utilities live inside this package
+from northswarm.math3d import *
 import struct
 import threading
 
