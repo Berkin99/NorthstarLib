@@ -20,8 +20,9 @@ The most common first step is to start the daemon using the `run` command:
 ./nc.py run
 ```
 
-While the daemon is running it listens on the UNIX socket
-`~/.northstar_socket` for further commands from other invocations of `nc.py`.
+While the daemon is running it listens for requests from other invocations of
+`nc.py`.  On Unix systems a UNIX domain socket `~/.northstar_socket` is used.
+On Windows the daemon falls back to TCP port `28600` on `localhost` instead.
 Linked agent identifiers are stored in `~/.northstar_links` so that they are
 reconnected automatically when the daemon launches.
 
