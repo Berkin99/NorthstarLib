@@ -110,7 +110,7 @@ class NorthPipe():
 
     def transmitPacket(self,txPacket = ntrp.NTRPPacket,force=False):
         #Packet with receiver ID = PIPE ID
-        self.radio.txHandler(txPacket,self.id,force)    
+        self.radio.txHandler(txPacket, self.id, force)    
           
     def txNAK(self):
         self.txpck = ntrp.NTRPPacket('NAK')
@@ -204,7 +204,6 @@ class NorthNRF(NorthPipe):
         packet = ntrp.NTRPPacket('TRX',ord(self.id))
         self.radio.txHandler(packet,ntrp.NTRP_ROUTER_ID)
         
-
     def pipeType(self):
         #NRTP_Pipe_t in the router
         arr = bytearray()

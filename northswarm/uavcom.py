@@ -16,8 +16,7 @@ import northlib.ntrp as radioManager
 from   northlib.ntrp.northpipe import NorthPipe,NorthNRF
 import northlib.ntrp.ntrp as ntrp
 from   northlib.ncmd.northcom import NorthCOM
-# The math utilities live inside this package
-from northswarm.math3d import *
+from   northswarm.math3d import *
 import struct
 import threading
 
@@ -25,11 +24,13 @@ import threading
 class UavCOM(NorthCOM):
 	
 	UAV_IDLE     = 0
-	UAV_MANUAL   = 1
-	UAV_HEIGHT   = 2
-	UAV_AUTO     = 3
-	UAV_TAKEOFF  = 4
-	UAV_LAND     = 5
+	UAV_ARM      = 1
+	UAV_DISARM   = 2
+	UAV_MANUAL   = 3
+	UAV_HEIGHT   = 4
+	UAV_AUTO     = 5
+	UAV_TAKEOFF  = 6
+	UAV_LAND     = 7
 
 	CMD_ID_UAV_CONTROLLER = 40
 
@@ -70,6 +71,8 @@ class UavCOM(NorthCOM):
 	def setMode(self, mode=int):
 		modeDict = {
 			self.UAV_IDLE    : self._uavIdle,
+			self.UAV_ARM     : self._uavArm,
+			self.UAV_DISARM  : self._uavDisarm,
 			self.UAV_MANUAL  : self._uavManual,
 			self.UAV_HEIGHT  : self._uavHeight,
 			self.UAV_AUTO    : self._uavAuto,
@@ -121,11 +124,14 @@ class UavCOM(NorthCOM):
 
 	def uavCMD(self, arg):
 		""" IDLE    : [0]
-		    MANUAL  : [1, roll, pitch, yaw, power]
-		    HEIGHT  : [2, roll, pitch, yaw, posz[4]]
-		    AUTO    : [3, posx[4], posy[4], posz[4]]
-		    TAKEOFF : [4]
-		    LAND    : [5] """
+			ARM		: [1]
+			DISARM  : [2]
+		    MANUAL  : [3, roll, pitch, yaw, power]
+		    HEIGHT  : [4, roll, pitch, yaw, posz[4]]
+		    AUTO    : [5, posx[4], posy[4], posz[4]]
+		    TAKEOFF : [6]
+		    LAND    : [7] 	
+		"""
 		self.txCMD(dataID = self.CMD_ID_UAV_CONTROLLER, channels = bytearray(arg))
 
 	def destroy(self):

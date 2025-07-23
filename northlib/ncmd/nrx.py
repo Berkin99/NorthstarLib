@@ -114,7 +114,6 @@ def NrxParse(rawarray = bytearray)->Nrx:
     element = Nrx(index=nrxindex,rawtype=nrxtype,name=nrxname.decode(errors='ignore'))
     return element
 
-
 def NrxTypeParse (rawtype):
     """ Rawtype(byte) to NrxType_e """
 

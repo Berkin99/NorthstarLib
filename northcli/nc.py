@@ -14,7 +14,6 @@ sys.path.insert(0, str(Path(__file__).parent))
 from ncclient import NorthClient
 from ncconfig import NorthConfig
 
-
 def handle_link(args):
     """Link agents to the daemon"""
     try:
@@ -32,7 +31,6 @@ def handle_link(args):
             
     except Exception as e:
         print(f"Error: {e}")
-
 
 def handle_unlink(args):
     """Unlink agents from the daemon"""

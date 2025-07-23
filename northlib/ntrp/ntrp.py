@@ -59,13 +59,13 @@ class NTRPPacket():
                 self.header = header
 
     #TODO: set dataid with name
-    def setDataID(self,dataid):        
+    def setDataID(self, dataid):        
         self.dataID = dataid
 
 class NTRPMessage(NTRPPacket):
     MAX_MESSAGE_SIZE = 32
 
-    def __init__(self,talker='0',receiver='0'):
+    def __init__(self, talker='0', receiver='0'):
         super().__init__()
         self.talker      = talker           #char
         self.receiver    = receiver         #char
@@ -133,7 +133,6 @@ def NTRP_LogMessage(message=NTRPMessage):
     print("HEADER: ", message.header.name)
     print("DATID: ", message.dataID)
     print("DATA: ", NTRP_bytes(message.data))
-
 
 def NTRP_bytes(byt):
     msg = binascii.hexlify(byt)

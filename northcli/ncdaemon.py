@@ -67,8 +67,8 @@ class NorthDaemon:
             from northswarm.uavcom import UavCOM
             
             linked_agents = self.config.load_links()
-            for agent_id in linked_agents:
-                uri = f"radio:/0/76/2/E7E7E7E{int(agent_id):03d}"
+            for idx, agent_id in enumerate(linked_agents):
+                uri = f"radio:/{idx}/76/2/E7E7E7E{int(agent_id):03d}"
                 com = UavCOM(uri)
                 com.start()
                 self.uav_connections[agent_id] = com
@@ -146,7 +146,9 @@ class NorthDaemon:
                             sys.path.insert(0, parent_dir)
                         
                         from northswarm.uavcom import UavCOM
-                        uri = f"radio:/0/76/2/E7E7E7E{int(agent_id):03d}"
+                        # Calculate radio index based on position in all_ids list
+                        radio_idx = all_ids.index(agent_id)
+                        uri = f"radio:/{radio_idx}/76/2/E7E7E7E{int(agent_id):03d}"
                         com = UavCOM(uri)
                         com.start()
                         self.uav_connections[agent_id] = com

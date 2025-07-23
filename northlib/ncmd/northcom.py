@@ -10,7 +10,6 @@
 
 import time
 from northlib.ntrp.northpipe import NorthNRF
-from northlib.ntrp.ntrpbuffer import NTRPBuffer
 from northlib.ncmd.nrxtable import NrxTable
 from northlib.ncmd.nrxtable import NrxTableLog
 

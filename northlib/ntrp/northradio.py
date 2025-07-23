@@ -13,7 +13,6 @@ import threading
 import queue
 import northlib.ntrp.ntrp as ntrp
 from northlib.ntrp.northport import NorthPort
-from northlib.ntrp.ntrpbuffer import NTRPBuffer
 
 __author__ = 'Yeniay RD'
 __all__ = ['NorthRadio']

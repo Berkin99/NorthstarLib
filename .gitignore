@@ -9,3 +9,5 @@ venv*
 **/cache/*.json
 
 .vscode/
+.claude/
+CLAUDE.md
